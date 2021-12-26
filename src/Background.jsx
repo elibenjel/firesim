@@ -7,12 +7,11 @@ const useStyles = makeStyles({
     root: ({bimg}) => {
         return {
             backgroundImage: `url(${bimg})`,
-            WebkitBackgroundSize: 'cover',
             backgroundSize: 'cover',
             backgroundPosition: 'center center',
             minHeight: '100%',
             minWidth: '100%',
-            position: "fixed",
+            position: 'fixed',
             top: 0,
             left: 0
         }

@@ -1,6 +1,6 @@
 import React from 'react';
 import { render } from 'react-dom';
 
-import Welcome from './Welcome.jsx';
+import App from './App.jsx';
 
-render(<Welcome />, document.getElementById('root'));
+render(<App />, document.getElementById('root'));
