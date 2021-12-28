@@ -1,14 +1,10 @@
 import React from 'react';
-import { Button, Container, AppBar } from '@material-ui/core';
-import {
-    BrowserRouter as Router,
-    Switch,
-    Route,
-    Link
-  } from "react-router-dom";
+import { Button, AppBar } from '@material-ui/core';
+import { Link } from "react-router-dom";
 import { makeStyles } from '@material-ui/core/styles';
-import Background from './Background.jsx'
-import welcome_background from '../assets/welcome_background.jpg';
+import Background from '../Background/Background.jsx'
+import welcome_background from '../Background/welcome_background.jpg';
+import LoginForm from '../LoginForm/LoginForm.jsx';
 
 const useStyles = makeStyles({
     inner: {
@@ -31,31 +27,40 @@ const useStyles = makeStyles({
         textAlign: 'center'
     },
     innerRight: {
-        width: '40%',
+        width: '30%',
         display: 'grid',
         gridTemplateColumns: '100%',
         alignContent: 'center',
         justifyContent: 'space-around',
         textAlign: 'center'
     },
+    "@keyframes glow": {
+        "from": {
+            textShadow: '0 0 2rem #ff6b4b'
+        },
+        "to": {
+            textShadow: '0 0 3rem #f91616, 0 0 1rem #f91616'
+        }
+    },
     apptitle: {
-        color:'red'
+        color: '#e02800',
+        animation: '$glow 2s ease-in-out infinite alternate'
     }
   });
 
-const Welcome = () => {
+const Welcome = ({setToken}) => {
     const classes = useStyles();
     return (
         <Background source={welcome_background}>
             <div className={classes.inner}>
                 <div className={classes.innerLeft}>
                     <h1>Welcome to <span className={classes.apptitle}>FIRESim</span>.</h1>
-                    <h2>To begin, sign in and run a simulation.</h2>
-                    <a href="https://www.freepik.com/vectors/background">Background vector created by Harryarts - www.freepik.com</a>
+                    <h2>To begin, login and start a simulation.</h2>
+                    <a href='https://www.freepik.com/vectors/background'>Background vector created by Harryarts - www.freepik.com</a>
                 </div>
                 <div className={classes.innerRight}>
-                    <Button variant='contained' color='primary' fullWidth={false}>Sign in</Button>
-                    <p>No account yet ? <Link to="/signup">Sign up</Link></p>
+                    <LoginForm setToken={setToken} />
+                    <p>No account yet ? <Link to='/signup'>Sign up</Link></p>
                 </div>
             </div>
         </Background>
