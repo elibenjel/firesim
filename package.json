@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "private": true,
+  "proxy": "http://localhost:3000",
   "scripts": {
     "start": "webpack-dev-server --mode=development --open --hot",
     "serve": "node server.js",
@@ -12,12 +13,21 @@
     "presets": [
       "@babel/preset-env",
       "@babel/preset-react"
+    ],
+    "plugins": [
+      [
+        "@babel/transform-runtime",
+        {
+          "regenerator": true
+        }
+      ]
     ]
   },
   "author": "",
   "license": "ISC",
   "devDependencies": {
     "@babel/core": "^7.16.5",
+    "@babel/plugin-transform-runtime": "^7.16.5",
     "@babel/preset-env": "^7.16.5",
     "@babel/preset-react": "^7.16.5",
     "@pmmmwh/react-refresh-webpack-plugin": "^0.5.4",
@@ -36,6 +46,9 @@
   "dependencies": {
     "@material-ui/core": "^4.12.3",
     "@material-ui/styles": "^4.11.4",
+    "body-parser": "^1.19.1",
+    "cors": "^2.8.5",
+    "jsonwebtoken": "^8.5.1",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
     "react-query": "^3.34.6",

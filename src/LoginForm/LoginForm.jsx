@@ -1,9 +1,11 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import { Button, AppBar } from '@material-ui/core';
 import { Link, useNavigate } from "react-router-dom";
 import { makeStyles } from '@material-ui/core/styles';
 import Background from '../Background/Background.jsx'
 import welcome_background from '../Background/welcome_background.jpg';
+import { loginUser } from '../services/login.js';
 
 const useStyles = makeStyles({
     root: {
@@ -14,17 +16,28 @@ const useStyles = makeStyles({
         textAlign: 'center',
         padding: '1rem'
     }
-  });
+});
 
 const LoginForm = ({setToken}) => {
     const classes = useStyles();
     const navigate = useNavigate();
 
-    function handleSubmit(event) {
-        event.preventDefault();
-        const username = event.target.elements.usernameInput.value;
-        navigate(`/users/${username}`);
-      }
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        const username = e.target.elements.usernameInput.value;
+        const password = e.target.elements.passwordInput.value;
+        loginUser({username, password})
+        .then((res) => {
+            if (res.status == 200) {
+                console.log('Your token is ', res.data.token);
+                setToken(res.data.token);
+                navigate(`/users/${username}`);
+            }
+            else {
+                alert(`${res.message} (code: ${res.status})`);
+            }
+        });
+    }
 
     return (
         <form onSubmit={handleSubmit}>
@@ -38,5 +51,9 @@ const LoginForm = ({setToken}) => {
         </form>
     );
 };
+
+LoginForm.propTypes = {
+    setToken: PropTypes.func.isRequired
+}
 
 export default LoginForm;

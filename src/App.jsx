@@ -19,7 +19,6 @@ const App = () => {
             <div>
               <Routes>
                 <Route path="/" element={<Welcome setToken={setToken} />} />
-                <Route path="/login" element={<LoginForm />} />
                 <Route path="/signup" element={<SignupForm />} />
                 <Route path="/users/:id" element={<Home />} />
               </Routes>
