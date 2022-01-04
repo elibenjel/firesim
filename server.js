@@ -43,8 +43,8 @@ app.post('/login', (req, res) => {
 
   if (success) {
     const token = jwt.sign(
-      {userID : null},// also put an object with the userID here and in the body of the res : {userId: user._id}
-      'RANDOM_TOKEN_SECRET',
+      {userID : null}, // define a correct userID here and add it in the body of the res : {userId: user._id}
+      'RANDOM_TOKEN_SECRET', // longer string here for production
       { expiresIn: '24h' }
     );
     res.send(body(200, {token : token}, ''))
