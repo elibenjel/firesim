@@ -7,10 +7,10 @@ import {
   } from "react-router-dom";
 import { QueryClientProvider, QueryClient } from 'react-query';
 import { ReactQueryDevtools } from 'react-query/devtools';
-import Welcome from './Welcome/Welcome.jsx';
-import LoginForm from './LoginForm/LoginForm.jsx';
-import SignupForm from './SignupForm/SignupForm.jsx';
-import Home from './Home/Home.jsx';
+import Welcome from './components/Welcome/Welcome.jsx';
+import LoginForm from './components/LoginForm/LoginForm.jsx';
+import SignupForm from './components/SignupForm/SignupForm.jsx';
+import Home from './components/Home/Home.jsx';
 
 const queryClient = new QueryClient();
 

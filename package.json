@@ -6,7 +6,7 @@
   "proxy": "http://localhost:3000",
   "scripts": {
     "start": "webpack-dev-server --mode=development --open --hot",
-    "serve": "node server.js",
+    "serve": "node src/server.js",
     "build": "webpack --mode=production"
   },
   "babel": {
