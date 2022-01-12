@@ -1,58 +1,99 @@
+if (process.env.NODE_ENV !== 'production') {
+  require('dotenv').config();
+}
+
+const { ApolloServer, AuthenticationError } = require('apollo-server-express');
+const { ApolloServerPluginDrainHttpServer } = require('apollo-server-core');
 const express = require('express');
-const cors = require('cors');
+const http = require('http');
+
 const bodyParser = require("body-parser");
-const jwt = require('jsonwebtoken');
 const webpack = require('webpack');
 const webpackDevMiddleware = require('webpack-dev-middleware');
 
-const app = express();
-const config = require('./webpack.config.js');
-const compiler = webpack(config);
+const typeDefs = require('./schema');
+const resolvers = require('./resolvers');
+const mg = require('mongoose');
+const { getModels } = require('./models');
+const { UserRoles } = require('./enums');
+const UserAPI = require('./datasources/user');
 
-//app.use(cors);
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(bodyParser.json());
+function setupExpressMiddleware() {
+  const app = express();
+  const config = require('./webpack.config.js');
+  const compiler = webpack(config);
 
-// Tell express to use the webpack-dev-middleware and use the webpack.config.js
-// configuration file as a base.
-app.use(
-  webpackDevMiddleware(compiler, {
-    publicPath: config.output.publicPath,
-  })
-);
+  app.use(bodyParser.urlencoded({ extended: false }));
+  app.use(bodyParser.json());
 
-app.use(require("webpack-hot-middleware")(compiler, {
-  log: false,
-  path: `/__webpack_hmr`,
-  heartbeat: 10 * 1000,
-}));
+  // Tell express to use the webpack-dev-middleware and use the webpack.config.js
+  // configuration file as a base.
+  app.use(
+    webpackDevMiddleware(compiler, {
+      publicPath: config.output.publicPath,
+    })
+  );
 
-var accepted_ids = [];
-accepted_ids.push({username : 'temp', password : 'temp'});
-const body = (st, data, msg) => ({status : st, data : data, message : msg});
+  app.use(require("webpack-hot-middleware")(compiler, {
+    log: false,
+    path: `/__webpack_hmr`,
+    heartbeat: 10 * 1000,
+  }));
 
-app.post('/login', (req, res) => {
-  let {username, password} = req.body;
-  success = false;
-  for(let i=0; i<accepted_ids.length; i++) {
-    if(username == accepted_ids[i].username && password == accepted_ids[i].password) {
-      success = true;
-      break;
+  return app;
+}
+
+async function startApolloServer(typeDefs, resolvers) {
+  const app = setupExpressMiddleware();
+  const httpServer = http.createServer(app);
+  const models = getModels(mg);
+  let connectedToDB = false;
+
+  const server = new ApolloServer({
+    typeDefs,
+    resolvers,
+    plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
+    dataSources: () => ({
+        userAPI: new UserAPI({ models })
+    }),
+    context: async function({ req }) {
+      if (!connectedToDB) {
+        console.log('Connecting to database...');
+        mg.connect(process.env.MONGODB_URI).then(() => console.log('Connected !')).catch((err) => { throw err });
+        connectedToDB = true;
+      }
+  
+      if (process.env.NODE_ENV !== 'production' && req.headers.origin === 'https://studio.apollographql.com') {
+        console.log(typeDefs);
+        return {user : { token : '', roles : [UserRoles.ADMIN]}};
+      }
+  
+      // simple auth check on every request
+      const token = req.headers?.authorization?.split(' ')[1] || null;
+      const user = token ? await UserAPI.authUser(token) : null;
+      // if (!user) throw new AuthenticationError('You must be logged in.');
+      
+      return { user: {token : token, roles : user?.roles} };
+    },
+    formatError: (err) => {
+      console.error(err.extensions.exception.stacktrace);
+      return err;
     }
-  }
+  });
 
-  if (success) {
-    const token = jwt.sign(
-      {userID : null}, // define a correct userID here and add it in the body of the res : {userId: user._id}
-      'RANDOM_TOKEN_SECRET', // longer string here for production
-      { expiresIn: '24h' }
-    );
-    res.send(body(200, {token : token}, ''))
-  }
-  else res.status(401).send(body(401, null, 'You provided an invalid username or password'));
+  await server.start();
+  server.applyMiddleware({ app });
+  await new Promise(resolve => httpServer.listen({ port: process.env.PORT }, resolve));
+  console.log(`
+    Server is running!
+    Listening at http://localhost:${process.env.PORT}${server.graphqlPath}
+    Explore at https://studio.apollographql.com/sandbox
+  `);
+}
+
+process.on('SIGINT', function() {
+  console.log( "\nGracefully shutting down the server and closing connection to database (SIGINT).");
+  mg.connection?.close();
 });
 
-// Serve the files on port 3000.
-app.listen(3000, function () {
-  console.log('FIRESim server listening on port 3000!\n');
-});
+startApolloServer(typeDefs, resolvers);

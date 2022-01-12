@@ -7,6 +7,18 @@ import Background from '../Background/Background.jsx'
 import welcome_background from '../Background/welcome_background.jpg';
 import { loginUser } from '../services/login.js';
 import { useEffect, useState, useRef } from 'react';
+import { useMutation } from 'react-query';
+
+// fetch(apiURL, {
+//     method: 'POST',
+//     headers: {
+//       'Content-Type': 'application/json',
+//     },
+//     body: JSON.stringify(postData),
+//   })
+//       .then(response => response.json())
+//       .then(jsonResponse => console.log('Success: ', jsonResponse))
+//       .catch(error => console.log('Error: ', error));
 
 const useStyles = makeStyles({
     root: {
@@ -25,53 +37,59 @@ const useStyles = makeStyles({
     }
 });
 
+const useLogin = (args) => {
+    return useMutation(loginUser, args);
+}
+
 const LoginForm = ({setToken}) => {
     const classes = useStyles();
     const navigate = useNavigate();
     const mounted = useRef(true);
-    const [err, setErr] = useState('');
+    const [username, setUsername] = useState('');
+    const [password, setPassword] = useState('');
+    const [errMsg, setErrMsg] = useState('');
+
+    const onError = (err) => {
+        console.log('An error happened during the login attempt:\n', err);
+        setErrMsg(err);
+    }
+
+    const onSuccess = (data) => {
+        const errors = data.errors;
+        if (errors) {
+            const msg = errors.reduce((payload, curr) => `${payload}\n${curr.message}`, '');
+            setErrMsg(msg);
+            setTimeout(() => setErrMsg(''), 5000);
+        }
+        else {
+            const token = data.data.login.token;
+            setToken(token);
+            console.log('Your token is: ', data);
+            navigate(`/users/${username}`);
+        }
+    }
+
+    const {mutate : login, isError, error} = useMutation(loginUser, {onSuccess, onError});
 
     useEffect(() => {
         mounted.current = true;
         return () => mounted.current = false;
     });
 
-    useEffect(() => {
-        if (err.length) {
-            setTimeout(() => {
-                setErr('');
-            }, 5000);
-        }
-    }, [err])
-
     const handleSubmit = async (e) => {
         e.preventDefault();
-        const username = e.target.elements.usernameInput.value;
-        const password = e.target.elements.passwordInput.value;
-        loginUser({username, password})
-        .then((res) => {
-            if (!mounted.current) return;
-
-            if (res.status == 200) {
-                console.log('Your token is ', res.data.token);
-                setToken(res.data.token);
-                navigate(`/users/${username}`);
-            }
-            else {
-                setErr(res.message);
-                console.log(`${res.message} (code: ${res.status})`);
-            }
-        });
+        if (!mounted.current) return;
+        login({username, password});
     }
 
     return (
         <form onSubmit={handleSubmit}>
         <div className={classes.root}>
             <label htmlFor="usernameInput">Username:</label>
-            <input id="usernameInput" type="text" />
+            <input id="usernameInput" type="text" onChange={(event) => setUsername(event.target.value)} />
             <label htmlFor="passwordInput">Password:</label>
-            <input id="passwordInput" type="password" />
-            <div className={classes.errdiv}>{err}</div>
+            <input id="passwordInput" type="password" onChange={(event) => setPassword(event.target.value)} />
+            <div className={classes.errdiv}>{errMsg}</div>
         </div>
         <Button type="submit" variant='contained' color='primary'>Login</Button>
         </form>
