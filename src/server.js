@@ -7,7 +7,8 @@ const { ApolloServerPluginDrainHttpServer } = require('apollo-server-core');
 const express = require('express');
 const http = require('http');
 
-const bodyParser = require("body-parser");
+const history = require('connect-history-api-fallback');
+const bodyParser = require('body-parser');
 const webpack = require('webpack');
 const webpackDevMiddleware = require('webpack-dev-middleware');
 
@@ -20,12 +21,24 @@ const UserAPI = require('./datasources/user');
 
 function setupExpressMiddleware() {
   const app = express();
-  const config = require('./webpack.config.js');
+  const config = require('../webpack.config.js');
   const compiler = webpack(config);
 
   app.use(bodyParser.urlencoded({ extended: false }));
   app.use(bodyParser.json());
 
+  app.use(require('webpack-hot-middleware')(compiler, {
+    log: false,
+    path: `/__webpack_hmr`,
+    heartbeat: 10 * 1000,
+  }));
+
+  app.use(history({
+    rewrites: [
+      { from: /\/graphql/, to: '/graphql'}
+    ]
+  }));
+  
   // Tell express to use the webpack-dev-middleware and use the webpack.config.js
   // configuration file as a base.
   app.use(
@@ -34,14 +47,9 @@ function setupExpressMiddleware() {
     })
   );
 
-  app.use(require("webpack-hot-middleware")(compiler, {
-    log: false,
-    path: `/__webpack_hmr`,
-    heartbeat: 10 * 1000,
-  }));
-
   return app;
 }
+
 
 async function startApolloServer(typeDefs, resolvers) {
   const app = setupExpressMiddleware();
@@ -83,16 +91,27 @@ async function startApolloServer(typeDefs, resolvers) {
 
   await server.start();
   server.applyMiddleware({ app });
+
+  // app.get('/*', function(req, res) {
+  //   // res.sendFile(path.resolve(__dirname, 'path/to/your/index.html'), function(err) {
+  //     res.sendFile(path.resolve('build', 'index.html'), function(err) {
+  //       if (err) {
+  //       res.status(500).send(err)
+  //     }
+  //   })
+  // })
+
   await new Promise(resolve => httpServer.listen({ port: process.env.PORT }, resolve));
   console.log(`
     Server is running!
-    Listening at http://localhost:${process.env.PORT}${server.graphqlPath}
+    Listening to graphql requests at http://localhost:${process.env.PORT}${server.graphqlPath}
+    Connect to FIRESim at http://localhost:${process.env.PORT}/
     Explore at https://studio.apollographql.com/sandbox
   `);
 }
 
 process.on('SIGINT', function() {
-  console.log( "\nGracefully shutting down the server and closing connection to database (SIGINT).");
+  console.log( '\nGracefully shutting down the server and closing connection to database (SIGINT).');
   mg.connection?.close();
 });
 

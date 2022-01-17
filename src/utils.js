@@ -1,10 +1,30 @@
 const isEmail = require('isemail');
+const jwt = require('jsonwebtoken');
+require('dotenv').config();
 
 module.exports.checkEmail = (str) => {
   const email = str ? str : '';
   return isEmail.validate(email) ? email : null;
 }
 
+module.exports.genToken = (user) => {
+  const token = jwt.sign(
+    { userId: user._id },
+    process.env.JWT_SECRET,
+    { expiresIn: process.env.TOKEN_EXP }
+  );
+
+  return token;
+}
+
+module.exports.checkToken = (token) => {
+  try {
+    const check = jwt.verify(token, process.env.JWT_SECRET);
+    return check;
+  } catch (err) {
+    throw err;
+  }
+}
 
 module.exports.paginateResults = ({
   after: cursor,

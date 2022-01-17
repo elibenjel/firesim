@@ -1,8 +1,7 @@
 const { DataSource } = require('apollo-datasource');
 const { AuthenticationError } = require('apollo-server-express');
 const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
-const { checkEmail } = require('../utils');
+const { checkEmail, genToken, checkToken } = require('../utils');
 const { UserRoles } = require('../enums');
 
 class UserAPI extends DataSource {
@@ -37,6 +36,8 @@ class UserAPI extends DataSource {
 
     await user.save();
     console.log(`New user added:\n email: ${user.email}\n ID: ${user._id}`);
+    const token = genToken(user);
+    user.token = token;
     return user;
   }
 
@@ -50,13 +51,8 @@ class UserAPI extends DataSource {
     const valid = await bcrypt.compare(passwordArg, user.password);
     if (!valid) throw new AuthenticationError('The credentials provided are incorrect');
 
-    const token = jwt.sign(
-      { userId: user._id },
-      process.env.JWT_SECRET,
-      { expiresIn: process.env.TOKEN_EXP }
-    );
-
-    user.token = token
+    const token = genToken(user);
+    user.token = token;
     console.log(`Succesfully logged in user ${user._id}.`);
     return user;
   }
@@ -89,7 +85,7 @@ class UserAPI extends DataSource {
 
   static async authUser(token) {
     try {
-      const { userID } = jwt.verify(token, process.env.JWT_SECRET);
+      const { userID } = checkToken(token);
       const user =
       await this.models.User.
       findOne({ _id : userID }).
