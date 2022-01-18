@@ -8,7 +8,7 @@ import {
 import { QueryClientProvider, QueryClient } from 'react-query';
 import { ReactQueryDevtools } from 'react-query/devtools';
 import WelcomePage from './components/WelcomePage/WelcomePage.jsx';
-import HomePage from './components/HomePage/HomePage.jsx';
+import MainPage from './components/MainPage/MainPage.jsx';
 import { CssBaseline } from '@mui/material';
 import { ThemeProvider } from '@mui/material/styles';
 import myTheme from './theme.js';
@@ -78,7 +78,7 @@ const App = () => {
               <Routes>
                 <Route path='/' element={<WelcomePage setToken={(value) => (token.current = value)} />} />
                 {(!!token.current) ?
-                  <Route path='/home/:id' element={<HomePage />} />
+                  <Route path='/home/:id' element={<MainPage />} />
                   : <Route path='*' element={<Navigate replace to="/" />} />
                 }
               </Routes>

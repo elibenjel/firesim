@@ -1,5 +1,6 @@
 import { createTheme } from '@mui/material/styles';
 import {red, blue} from '@mui/material/colors';
+import { ThemeContext } from '@emotion/react';
 
 const myTheme = createTheme({
     palette: {
@@ -18,8 +19,38 @@ const myTheme = createTheme({
     }
 });
 
+console.log(myTheme.transitions.create());
+
 myTheme.components = {
     MuiPaper: {
+        variants: [
+            {
+              props: { variant: 'left' },
+              style: {
+                // textTransform: 'none',
+                // border: `2px dashed ${blue[500]}`,
+                backgroundImage: `radial-gradient(circle at center, ${myTheme.palette.primary.light} 70%, ${myTheme.palette.primary.dark} 100%)`,
+                // maxHeight: '80%',
+                maxWidth : '40%',
+                borderRadius: 16,
+                boxShadow: myTheme.shadows[0],
+                margin: 24,
+                padding: 32
+              },
+            },
+            {
+              props: { variant: 'right' },
+              style: {
+                border: `2px solid ${myTheme.palette.secondary.light}`,
+                borderRadius: 0,
+                // maxHeight: '80%',
+                maxWidth: '40%',
+                boxShadow: myTheme.shadows[10],
+                margin: 32,
+                padding: 16
+              },
+            },
+          ],
         styleOverrides: {
             elevation2: {
                 border: 'solid',

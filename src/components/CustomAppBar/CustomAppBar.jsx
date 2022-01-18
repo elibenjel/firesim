@@ -1,32 +1,32 @@
 import React from 'react';
 import { useState } from 'react';
-import { Tabs, Tab } from '@mui/material';
+import {
+    Tabs,
+    Tab,
+    Box,
+    AppBar,
+    Menu,
+    MenuItem,
+    IconButton
+} from '@mui/material';
 import { useTheme } from '@mui/material/styles';
-import AppBar from '@mui/material/AppBar';
-import Box from '@mui/material/Box';
-import Toolbar from '@mui/material/Toolbar';
-import Typography from '@mui/material/Typography';
-import IconButton from '@mui/material/IconButton';
-import MenuIcon from '@mui/icons-material/Menu';
-import AccountCircle from '@mui/icons-material/AccountCircle';
-import HelpIcon from '@mui/icons-material/Help';
-import Switch from '@mui/material/Switch';
-import FormControlLabel from '@mui/material/FormControlLabel';
-import FormGroup from '@mui/material/FormGroup';
-import MenuItem from '@mui/material/MenuItem';
-import Menu from '@mui/material/Menu';
-import { BorderColor } from '@mui/icons-material';
-import { maxWidth } from '@mui/system';
+import {
+    AccountCircle,
+    TrendingUp,
+    Whatshot,
+    Help,
+    Analytics
+} from '@mui/icons-material';
 
 
-const CustomAppBar = () => {
+const CustomAppBar = ({ panels, tab, setTab }) => {
     const [anchorEl, setAnchorEl] = useState(null);
-    const [tab, setTab] = useState(0);
 
     const theme = useTheme();
     console.log(theme.palette);
 
     const handleChange = (event, newTab) => {
+        console.log(newTab);
       setTab(newTab);
     };
 
@@ -40,97 +40,70 @@ const CustomAppBar = () => {
 
     return (
         <Box sx={{
-            flexGrow: 1
         }}>
-        <AppBar position="static">
-            <Toolbar disableGutters >
+        <AppBar position="static" sx={{
+            display: 'flex',
+            flexDirection: 'row',
+            alignItems: 'center'
+        }}>
             <IconButton
-                size="large"
                 edge="start"
                 color="inherit"
-                aria-label="menu"
+                aria-label="logo"
                 sx={{ m: '0 1rem 0' }}
             >
-                <MenuIcon />
+                <Whatshot fontSize='large' />
             </IconButton>
             <Tabs
                 value={tab}
-                // variant='scrollable'
                 onChange={handleChange}
                 aria-label="basic tabs example"
-                textColor='primary'
-                sx={{
-                    // flex: 1,
-                    // m: 2,
-                    // '& .Mui-selected' : {
-                    //     backgroundColor: theme.palette.grey[50],
-                    //     borderRadius: 2,
-                    //     fontWeight: 'bold',
-                    //     m: 1
-                    // },
-                    // '& .MuiTab-root' : {
-                    //     color: theme.palette.primary.contrastText,
-                    // },
-                    // '& .MuiTabs-indicator' : {
-                    //     backgroundColor: theme.palette.grey[50],
-                    // },
-                    // '& .MuiTabScrollButton' : {
-                    //     color:theme.palette.grey[50],
-                    //     backgroundColor: theme.palette.grey[50],
-                    // }
-                }}
-                // TabScrollButtonProps={{
-                //     style: {
-                //         color:theme.palette.grey[50],
-                //         // backgroundColor: theme.palette.grey[50]
-                //     }
-                // }}
             >
-                {['Item One', 'Item Two', 'Item Three'].map((label, index) => {
+                {panels.map(({ tabLabel, panelID, icon }, index) => {
                     return (
                         <Tab
-                            key={index} id={String(index)}
-                            label={label} aria-label={`tab of ${label}`}
-                            icon={<HelpIcon />} iconPosition='start'
+                            key={index} id={`${panelID}-tab`}
+                            label={tabLabel} aria-label={`tab labeled as ${tabLabel}`}
+                            aria-controls={panelID}
+                            icon={icon} iconPosition='start'
                         />
                     );
                 })}
             </Tabs>
-            <div>
+            <Box>
                 <IconButton
-                size="large"
-                aria-label="account of current user"
-                aria-controls="menu-appbar"
-                aria-haspopup="true"
-                onClick={handleMenu}
-                color="inherit"
-                sx={{ m : '0 1rem 0' }}
+                    size="large"
+                    aria-label="account of current user"
+                    aria-controls="menu-appbar"
+                    aria-haspopup="true"
+                    onClick={handleMenu}
+                    color="inherit"
+                    sx={{ m : '0 1rem 0' }}
                 >
-                <AccountCircle />
+                    <AccountCircle />
                 </IconButton>
                 <Menu
-                id="menu-appbar"
-                anchorEl={anchorEl}
-                anchorOrigin={{
-                    vertical: 'top',
-                    horizontal: 'right',
-                }}
-                keepMounted
-                transformOrigin={{
-                    vertical: 'top',
-                    horizontal: 'right',
-                }}
-                open={!!anchorEl}
-                onClose={handleClose}
+                    id="menu-appbar"
+                    anchorEl={anchorEl}
+                    anchorOrigin={{
+                        vertical: 'top',
+                        horizontal: 'right',
+                    }}
+                    keepMounted
+                    transformOrigin={{
+                        vertical: 'top',
+                        horizontal: 'right',
+                    }}
+                    open={!!anchorEl}
+                    onClose={handleClose}
                 >
-                <MenuItem onClick={handleClose}>Profile</MenuItem>
-                <MenuItem onClick={handleClose}>My account</MenuItem>
+                    <MenuItem onClick={handleClose}>Profile</MenuItem>
+                    <MenuItem onClick={handleClose}>My account</MenuItem>
                 </Menu>
-            </div>
-            </Toolbar>
+            </Box>
         </AppBar>
         </Box>
     );
 }
 
-export default CustomAppBar
+export default CustomAppBar;
