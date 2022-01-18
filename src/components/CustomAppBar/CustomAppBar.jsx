@@ -9,12 +9,14 @@ import Typography from '@mui/material/Typography';
 import IconButton from '@mui/material/IconButton';
 import MenuIcon from '@mui/icons-material/Menu';
 import AccountCircle from '@mui/icons-material/AccountCircle';
+import HelpIcon from '@mui/icons-material/Help';
 import Switch from '@mui/material/Switch';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import FormGroup from '@mui/material/FormGroup';
 import MenuItem from '@mui/material/MenuItem';
 import Menu from '@mui/material/Menu';
 import { BorderColor } from '@mui/icons-material';
+import { maxWidth } from '@mui/system';
 
 
 const CustomAppBar = () => {
@@ -37,33 +39,61 @@ const CustomAppBar = () => {
     };
 
     return (
-        <Box sx={{ flexGrow: 1 }}>
+        <Box sx={{
+            flexGrow: 1
+        }}>
         <AppBar position="static">
-            <Toolbar>
+            <Toolbar disableGutters >
             <IconButton
                 size="large"
                 edge="start"
                 color="inherit"
                 aria-label="menu"
-                sx={{ mr: 2 }}
+                sx={{ m: '0 1rem 0' }}
             >
                 <MenuIcon />
             </IconButton>
-            <Tabs value={tab} onChange={handleChange} aria-label="basic tabs example" sx={{
-                '& .Mui-selected' : {
-                    color: theme.palette.convert3HexTo6Hex(theme.palette.primary.contrastText),
-                    // borderBottomColor: 'white',
-                    // borderBottomWidth: 1
-                }
-            }}>
+            <Tabs
+                value={tab}
+                // variant='scrollable'
+                onChange={handleChange}
+                aria-label="basic tabs example"
+                textColor='primary'
+                sx={{
+                    // flex: 1,
+                    // m: 2,
+                    // '& .Mui-selected' : {
+                    //     backgroundColor: theme.palette.grey[50],
+                    //     borderRadius: 2,
+                    //     fontWeight: 'bold',
+                    //     m: 1
+                    // },
+                    // '& .MuiTab-root' : {
+                    //     color: theme.palette.primary.contrastText,
+                    // },
+                    // '& .MuiTabs-indicator' : {
+                    //     backgroundColor: theme.palette.grey[50],
+                    // },
+                    // '& .MuiTabScrollButton' : {
+                    //     color:theme.palette.grey[50],
+                    //     backgroundColor: theme.palette.grey[50],
+                    // }
+                }}
+                // TabScrollButtonProps={{
+                //     style: {
+                //         color:theme.palette.grey[50],
+                //         // backgroundColor: theme.palette.grey[50]
+                //     }
+                // }}
+            >
                 {['Item One', 'Item Two', 'Item Three'].map((label, index) => {
-                    return <Tab key={index} id={String(index)} label={label} aria-label={`tab of ${label}`}
-                    sx = {{
-                        color: 'white',
-                        '& .Mui-selected' : {
-                            color: 'white'
-                        }
-                    }} />;
+                    return (
+                        <Tab
+                            key={index} id={String(index)}
+                            label={label} aria-label={`tab of ${label}`}
+                            icon={<HelpIcon />} iconPosition='start'
+                        />
+                    );
                 })}
             </Tabs>
             <div>
@@ -74,6 +104,7 @@ const CustomAppBar = () => {
                 aria-haspopup="true"
                 onClick={handleMenu}
                 color="inherit"
+                sx={{ m : '0 1rem 0' }}
                 >
                 <AccountCircle />
                 </IconButton>

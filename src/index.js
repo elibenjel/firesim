@@ -18,5 +18,6 @@ function component() {
   }
 
 const maindiv = document.createElement('div');
+maindiv.className = 'wrapper-size-specifier';
 document.body.appendChild(maindiv);
 render(<App />, maindiv);

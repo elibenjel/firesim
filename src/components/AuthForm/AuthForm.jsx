@@ -141,104 +141,94 @@ const AuthForm = ({setToken, sx}) => {
     
     return (
         <Paper
-            sx={{
-                border: 'solid',
-                borderWidth: 0.5,
-                borderColor: theme.palette.secondary.main,
-                p: 1,
-                m: 2,
-                overflowY: 'auto',
-                scrollbarColor: 'rebeccapurple green',
-                scrollbarWidth: 'thin',
-                ...sx
-            }}
+            sx={sx}
             elevation={2}
         >
-        <Box container
-            component='form'
-            sx={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-            }}
-            noValidate
-            autoComplete='off'
-            onSubmit={handleSubmit}
-        >
-            <FormControl item
-                component='fieldset'
-                sx={{ p : 0.5, m : 0.5}}
+            <Box container
+                component='form'
+                noValidate
+                autoComplete='off'
+                onSubmit={handleSubmit}
+                sx={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                }}
             >
-                <RadioGroup
-                    row
-                    aria-label='userAction'
-                    name='userAction'
-                    value={userAction}
-                    onChange={onRadioGroupChange}
+                <FormControl item
+                    component='fieldset'
+                    sx={{ p : 0.5, m : 0.5}}
                 >
-                    <FormControlLabel value={'login'} control={<Radio color='secondary' />} label='Login' />
-                    <FormControlLabel value={'signup'} control={<Radio color='secondary' />} label='Signup' />
-                </RadioGroup>
-            </FormControl>
-            <CustomTextField item
-                id='emailInput'
-                variant='outlined'
-                name='Email'
-                stateRef={email}
-                type='text'
-                validators={{
-                    isValid : () => formValidity.email,
-                    setIsValid : (value) => dispatchFieldValidity({issuer : 'email', value}),
-                    validateContent : validateEmail
-                }}
-                placeholder='123@example.com'
-                helperText='Enter a valid email'
-            />
-            <CustomTextField item
-                id='passwordInput'
-                variant='outlined'
-                name='Password'
-                stateRef={password}
-                type='password'
-                validators={{
-                    isValid : () => formValidity.password,
-                    setIsValid : (value) => dispatchFieldValidity({issuer : 'password', value}),
-                    validateContent : validatePassword
-                }}
-                helperText={`Enter a password of ${passwordMinimumLength} characters minimum`}
-            />
-            {userAction === 'signup' ? 
-            <>
+                    <RadioGroup
+                        row
+                        aria-label='userAction'
+                        name='userAction'
+                        value={userAction}
+                        onChange={onRadioGroupChange}
+                    >
+                        <FormControlLabel value={'login'} control={<Radio color='secondary' />} label='Login' />
+                        <FormControlLabel value={'signup'} control={<Radio color='secondary' />} label='Signup' />
+                    </RadioGroup>
+                </FormControl>
                 <CustomTextField item
-                    id='repasswordInput'
+                    id='emailInput'
                     variant='outlined'
-                    name='Repeat password'
-                    stateRef={repassword}
+                    name='Email'
+                    stateRef={email}
+                    type='text'
+                    validators={{
+                        isValid : () => formValidity.email,
+                        setIsValid : (value) => dispatchFieldValidity({issuer : 'email', value}),
+                        validateContent : validateEmail
+                    }}
+                    placeholder='123@example.com'
+                    helperText='Enter a valid email'
+                />
+                <CustomTextField item
+                    id='passwordInput'
+                    variant='outlined'
+                    name='Password'
+                    stateRef={password}
                     type='password'
                     validators={{
-                        isValid : () => formValidity.repassword,
-                        setIsValid : (value) => dispatchFieldValidity({issuer : 'repassword', value}),
-                        validateContent : (rpwd) => validateRepassword(rpwd, password)
+                        isValid : () => formValidity.password,
+                        setIsValid : (value) => dispatchFieldValidity({issuer : 'password', value}),
+                        validateContent : validatePassword
                     }}
-                    helperText='Type your password again'
+                    helperText={`Enter a password of ${passwordMinimumLength} characters minimum`}
                 />
-                <CustomTextField item
-                    id='countrySelect'
-                    variant='outlined'
-                    name='Country'
-                    stateRef={country}
-                    select
-                    validators={{
-                        isValid : () => formValidity.country,
-                        setIsValid : (value) => dispatchFieldValidity({issuer : 'country', value})
-                    }}
-                    selectOptions={countries}
-                    helperText='Select the financial system you belong to among the following available countries'
-                />
-            </>
-            : null}
-            <Button item type='Submit' {...disabledProp} variant='contained' color='secondary' sx={{m : 1}}>Submit</Button>
-        </Box>
+                {userAction === 'signup' ? 
+                <>
+                    <CustomTextField item
+                        id='repasswordInput'
+                        variant='outlined'
+                        name='Repeat password'
+                        stateRef={repassword}
+                        type='password'
+                        validators={{
+                            isValid : () => formValidity.repassword,
+                            setIsValid : (value) => dispatchFieldValidity({issuer : 'repassword', value}),
+                            validateContent : (rpwd) => validateRepassword(rpwd, password)
+                        }}
+                        helperText='Type your password again'
+                    />
+                    <CustomTextField item
+                        id='countrySelect'
+                        variant='outlined'
+                        name='Country'
+                        stateRef={country}
+                        select
+                        validators={{
+                            isValid : () => formValidity.country,
+                            setIsValid : (value) => dispatchFieldValidity({issuer : 'country', value})
+                        }}
+                        selectOptions={countries}
+                        helperText='Select the financial system you belong to among the following available countries'
+                    />
+                </>
+                : null}
+                <Button item type='Submit' {...disabledProp} variant='contained' color='secondary' sx={{m : 1}}>Submit</Button>
+            </Box>
         </Paper>
     );
 }
