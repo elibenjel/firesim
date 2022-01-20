@@ -14,7 +14,7 @@ const CustomTextField = ({
     selectOptions = null,
     type = 'text',
     validators,
-    setTargetID,
+    setTargetID=() => null,
     required=true,
     placeholder='',
     helperText='',
@@ -42,7 +42,7 @@ const CustomTextField = ({
     }
 
     const onFocus = (event) => {
-        const currentVal = (event.target.value) ? event.target.value : getStateUtility();
+        const currentVal = (event.target.value);// ? event.target.value : getStateUtility();
         setTargetID(id);
         setIsFocused(true);
         if (validateContent(currentVal)) {
@@ -62,8 +62,9 @@ const CustomTextField = ({
     }
 
     const onMouseOut = (event) => {
-        if (!isFocused) setTargetID(null);
-    } 
+        // if (!isFocused) setTargetID(null);
+        return;
+    }
 
     const eventHandlerProps = select ?
     { select, onChange : onDiff, onFocus, onMouseOver, onMouseOut }
@@ -114,6 +115,7 @@ const CustomTextField = ({
                     </InputAdornment>
                 }}
                 disabled={disabled}
+                {...other}
             >
                 {select ?
                 selectOptions.map((option) => {

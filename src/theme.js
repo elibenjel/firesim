@@ -78,6 +78,23 @@ const paperVariantsMaker = {
                 padding: 32
             }
         }
+    },
+
+    reversedSidePaper: (suffix) => {
+        return {
+            props: { variant : `side-${suffix}`, reversed : true },
+            style: {
+                backgroundImage: `linear-gradient(-90deg, ${myTheme.palette[suffix].light} 0%, ${myTheme.palette.background.paper} 15%)`,
+                borderTop: `thin solid`,
+                borderBottom: `1.5px solid`,
+                borderImage: `linear-gradient(to left, ${myTheme.palette[suffix].light} 20%, ${myTheme.palette.background.paper} 80%) 0.5`,
+                boxShadow: myTheme.shadows[0],
+                borderRadius: 0,
+                margin: 24,
+                padding: 32,
+                paddingRight: 80
+            }
+        }
     }
 }
 
