@@ -11,38 +11,40 @@ const WelcomePage = ({setToken}) => {
         <Box container sx= {{
             display: 'flex',
             flexDirection: 'row',
-            justifyContent: 'space-between',
+            justifyContent: 'center',
             alignItems : 'center',
             margin: '0 auto'
         }}>
-            <Paper variant='left' sx={{
+            <Paper variant='filled-primary' sx={{
+                maxWidth : '40%',
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'center'
             }} >
-                <Typography variant='h4' sx={{textAlign: 'center'}} >Welcome to <Box sx={{
+                <Typography variant='h4' fontWeight={'bold'} sx={{textAlign: 'center'}} >Welcome to <Box sx={{
                     display: 'inline',
-                    color: theme.palette.grey[50],
                     '@keyframes glow': {
                         'from': {
-                            textShadow: '0 0 2rem #fff'
+                            textShadow: `0 0 1rem ${theme.palette.primary.main}`,
+                            color: theme.palette.primary.light
                         },
                         'to': {
-                            textShadow: '0 0 3rem #fff, 0 0 1rem #fff'
+                            textShadow: `0 0 3rem ${theme.palette.primary.main}, 0 0 1rem ${theme.palette.primary.main}`,
+                            color: theme.palette.primary.dark
                         }
                     },
                     animation: 'glow 2s ease-in-out infinite alternate'
                 }}>FIRESim</Box></Typography>
                 <Typography variant='h8' color={theme.palette.text.secondary} sx={{textAlign: 'center'}} >To begin, login and start a simulation.</Typography>
             </Paper>
-            <Paper variant='right' >
+            <Paper variant='side-primary' sx={{ maxWidth : '40%'}} >
                 <AuthForm setToken={setToken}
                     sx={{
                         flex: 1,
                         overflowY: 'auto',
                         scrollbarColor: 'rebeccapurple green',
                         scrollbarWidth: 'thin',
-                        maxHeight: '70vh'
+                        maxHeight: '70vh',
                     }} />
             </Paper>
         </Box>

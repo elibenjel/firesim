@@ -14,9 +14,13 @@ const CustomTextField = ({
     selectOptions = null,
     type = 'text',
     validators,
+    setTargetID,
     required=true,
     placeholder='',
     helperText='',
+    startAdornment=null,
+    endAdornment=null,
+    disabled=false,
     sx = {},
     ...other}) => {
 
@@ -39,6 +43,7 @@ const CustomTextField = ({
 
     const onFocus = (event) => {
         const currentVal = (event.target.value) ? event.target.value : getStateUtility();
+        setTargetID(id);
         setIsFocused(true);
         if (validateContent(currentVal)) {
             setIsValid(true);
@@ -48,10 +53,23 @@ const CustomTextField = ({
     }
 
     const onBlur = (event) => {
+        setTargetID(null);
         setIsFocused(false);
     }
 
-    const props = select ? { select, onChange : onDiff, onFocus } : { type, onInput : onDiff, onFocus };
+    const onMouseOver = (event) => {
+        setTargetID(id);
+    }
+
+    const onMouseOut = (event) => {
+        if (!isFocused) setTargetID(null);
+    } 
+
+    const eventHandlerProps = select ?
+    { select, onChange : onDiff, onFocus, onMouseOver, onMouseOut }
+    : { type, onInput : onDiff, onFocus, onMouseOver, onMouseOut };
+
+    const valueProp = stateRef ? { value : stateRef.current } : { value : state };
 
     return (
         <Box container
@@ -65,15 +83,14 @@ const CustomTextField = ({
                 width: '85%',
                 ...sx
             }}
-            {...other}
         >
             <TextField item
                 variant={variant}
                 id={id}
                 label={name}
                 size='small'
-                value={stateRef.current}
-                {...props}
+                {...valueProp}
+                {...eventHandlerProps}
                 onBlur={onBlur}
                 required={required}
                 color='secondary'
@@ -86,15 +103,17 @@ const CustomTextField = ({
                     width: '100%',
                     '& .MuiFormHelperText-root' : {},
                 }}
-                // InputProps={{
-                //     endAdornment:
-                //     <InputAdornment position='end'>
-                //         {isValid() ?
-                //             <CheckCircle item color='success' sx={{visibility : hideIcon ? 'hidden' : 'visible'}}/>
-                //             : <Error item color='error' sx={{visibility : hideIcon ? 'hidden' : 'visible'}}/>
-                //         }
-                //     </InputAdornment>
-                // }}
+                InputProps={{
+                    startAdornment: startAdornment &&
+                    <InputAdornment position='start'>
+                        {startAdornment}
+                    </InputAdornment>,
+                    endAdornment: endAdornment &&
+                    <InputAdornment position='end'>
+                        {endAdornment}
+                    </InputAdornment>
+                }}
+                disabled={disabled}
             >
                 {select ?
                 selectOptions.map((option) => {
@@ -109,8 +128,8 @@ const CustomTextField = ({
                 : name}
             </TextField>
             {isValid() ?
-                <CheckCircle item color='success' sx={{ p : 1, visibility : isFocused ? 'visible' : 'hidden' }}/>
-                : <Error item color='error' sx={{ p : 1, visibility : isFocused ? 'visible' : 'hidden' }}/>
+                <CheckCircle item color='success' sx={{ m : 1, visibility : isFocused ? 'visible' : 'hidden' }}/>
+                : <Error item color='error' sx={{ m : 1, visibility : disabled || isFocused ? 'visible' : 'hidden' }}/>
             }
         </Box>
     );

@@ -1,5 +1,5 @@
 import { createTheme } from '@mui/material/styles';
-import {red, blue} from '@mui/material/colors';
+import { red, grey } from '@mui/material/colors';
 import { ThemeContext } from '@emotion/react';
 
 const myTheme = createTheme({
@@ -8,7 +8,7 @@ const myTheme = createTheme({
             main: red['A700'],
         },
         secondary: {
-            main: blue[900],
+            main: grey[500],
             // '&:hover': {
             //   main: 'red'
             // }
@@ -19,47 +19,86 @@ const myTheme = createTheme({
     }
 });
 
-console.log(myTheme.transitions.create());
-
-myTheme.components = {
-    MuiPaper: {
-        variants: [
-            {
-              props: { variant: 'left' },
-              style: {
-                // textTransform: 'none',
-                // border: `2px dashed ${blue[500]}`,
-                backgroundImage: `radial-gradient(circle at center, ${myTheme.palette.primary.light} 70%, ${myTheme.palette.primary.dark} 100%)`,
-                // maxHeight: '80%',
-                maxWidth : '40%',
-                borderRadius: 16,
+const paperVariantsMaker = {
+    filledPaper: (suffix) => {
+        return {
+            props: { variant : `filled-${suffix}`},
+            style: {
+                backgroundImage: `radial-gradient(circle at center, ${myTheme.palette.background.paper} 20%, ${myTheme.palette[suffix].light} 90%, ${myTheme.palette[suffix].dark} 100%)`,
+                borderRadius: 0,
+                border: `thin solid ${myTheme.palette[suffix].light}`,
                 boxShadow: myTheme.shadows[0],
                 margin: 24,
                 padding: 32
-              },
-            },
-            {
-              props: { variant: 'right' },
-              style: {
-                border: `2px solid ${myTheme.palette.secondary.light}`,
-                borderRadius: 0,
-                // maxHeight: '80%',
-                maxWidth: '40%',
-                boxShadow: myTheme.shadows[10],
-                margin: 32,
-                padding: 16
-              },
-            },
-          ],
-        styleOverrides: {
-            elevation2: {
-                border: 'solid',
-                borderWidth: 2,
-                borderColor: myTheme.palette.secondary.main,
-                p: 1,
-                m: 2,
             }
         }
+    },
+
+    densePaper: (suffix) => {
+        return {
+            props: { variant : `dense-${suffix}`},
+            style: {
+                backgroundImage: `radial-gradient(circle at center, ${myTheme.palette[suffix].light} 70%, ${myTheme.palette[suffix].dark} 100%)`,
+                borderRadius: 0,
+                boxShadow: myTheme.shadows[0],
+                margin: 24,
+                padding: 32
+            }
+        }
+    },
+
+    solidPaper: (suffix) => {
+        return {
+            props: { variant : `solid-${suffix}` },
+            style: {
+                backgroundImage: `linear-gradient(0deg, rgba(255, 255, 255, 0) 98%, ${myTheme.palette[suffix].dark} 100%),
+                linear-gradient(180deg, rgba(255, 255, 255, 0) 98%, ${myTheme.palette[suffix].dark} 100%),
+                linear-gradient(90deg, rgba(255, 255, 255, 0) 99%, ${myTheme.palette[suffix].dark} 100%),
+                linear-gradient(270deg, rgba(255, 255, 255, 0) 99%, ${myTheme.palette[suffix].dark} 100%),
+                linear-gradient(-45deg, rgba(255, 255, 255, 0) 90%, ${myTheme.palette[suffix].main} 100%)`,
+                borderRadius: 4,
+                boxShadow: myTheme.shadows[5],
+                margin: 32,
+                padding: 16
+            }
+        }
+    },
+
+    sidePaper: (suffix) => {
+        return {
+            props: { variant : `side-${suffix}` },
+            style: {
+                backgroundImage: `linear-gradient(90deg, ${myTheme.palette[suffix].light} 0%, ${myTheme.palette.background.paper} 15%)`,
+                borderTop: `thin solid`,
+                borderBottom: `1.5px solid`,
+                borderImage: `linear-gradient(to right, ${myTheme.palette[suffix].light} 20%, ${myTheme.palette.background.paper} 80%) 0.5`,
+                boxShadow: myTheme.shadows[0],
+                borderRadius: 0,
+                margin: 24,
+                padding: 32
+            }
+        }
+    }
+}
+
+const paperVariants = Object.keys(paperVariantsMaker).reduce((prev, current) => {
+    const maker = paperVariantsMaker[current];
+    const next = [...prev, maker('primary'), maker('secondary')];
+    return next;
+}, []);
+
+myTheme.components = {
+    MuiPaper: {
+        variants: paperVariants,
+        // styleOverrides: {
+        //     elevation2: {
+        //         border: 'solid',
+        //         borderWidth: 2,
+        //         borderColor: myTheme.palette.secondary.main,
+        //         p: 1,
+        //         m: 2,
+        //     }
+        // }
     },
 
     MuiTabs: {
@@ -133,7 +172,7 @@ myTheme.components = {
                 minHeight: '100vh',
                 minWidth: '700px',
                 height: '100vh',
-                width: '100vw',
+                width: '100%',
                 display: 'inline-flex'
             }
         }

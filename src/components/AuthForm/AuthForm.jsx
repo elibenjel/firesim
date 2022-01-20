@@ -58,7 +58,7 @@ const AuthForm = ({setToken, sx}) => {
     }
     console.log(errMsg);
 
-    const [formValidity, dispatchFieldValidity] = useReducer((currentState, action) => {
+    const [formValidity, dispatchFormValidity] = useReducer((currentState, action) => {
         let newState = {...currentState};
         newState[action.issuer] = action.value;
         return newState;
@@ -175,7 +175,7 @@ const AuthForm = ({setToken, sx}) => {
                 type='text'
                 validators={{
                     isValid : () => formValidity.email,
-                    setIsValid : (value) => dispatchFieldValidity({issuer : 'email', value}),
+                    setIsValid : (value) => dispatchFormValidity({issuer : 'email', value}),
                     validateContent : validateEmail
                 }}
                 placeholder='123@example.com'
@@ -189,7 +189,7 @@ const AuthForm = ({setToken, sx}) => {
                 type='password'
                 validators={{
                     isValid : () => formValidity.password,
-                    setIsValid : (value) => dispatchFieldValidity({issuer : 'password', value}),
+                    setIsValid : (value) => dispatchFormValidity({issuer : 'password', value}),
                     validateContent : validatePassword
                 }}
                 helperText={`Enter a password of ${passwordMinimumLength} characters minimum`}
@@ -204,7 +204,7 @@ const AuthForm = ({setToken, sx}) => {
                     type='password'
                     validators={{
                         isValid : () => formValidity.repassword,
-                        setIsValid : (value) => dispatchFieldValidity({issuer : 'repassword', value}),
+                        setIsValid : (value) => dispatchFormValidity({issuer : 'repassword', value}),
                         validateContent : (rpwd) => validateRepassword(rpwd, password)
                     }}
                     helperText='Type your password again'
@@ -217,7 +217,7 @@ const AuthForm = ({setToken, sx}) => {
                     select
                     validators={{
                         isValid : () => formValidity.country,
-                        setIsValid : (value) => dispatchFieldValidity({issuer : 'country', value})
+                        setIsValid : (value) => dispatchFormValidity({issuer : 'country', value})
                     }}
                     selectOptions={countries}
                     helperText='Select the financial system you belong to among the following available countries'
