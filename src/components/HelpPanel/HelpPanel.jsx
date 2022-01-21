@@ -14,44 +14,44 @@ const HelpPanel = () => {
     return (
         <>
             <Paper variant='side-primary' reversed sx={{ maxWidth : '40%'}} >
-                <Typography variant='h4' fontWeight={'bold'}>What is FI/RE ?</Typography>
-                <Typography variant='body1' sx={{ textAlign : 'justify' }} >
+                <Typography variant='h4' fontWeight='bold'>What is FI/RE ?</Typography>
+                <Typography variant='body1' component='div' sx={{ textAlign : 'justify' }} >
                     <p>
                         FI/RE means Financial Independence / Retire Early.
                     </p>
                     <p>
                         It is about managing your money in order to gain financial security for your future as fast as possible.
                         It truly is a life style that follows those guidelines :
-                        <List>
-                            <ListItem>
-                                <em>spend little, and</em>
-                            </ListItem>
-                            <ListItem>
-                                <em>invest what's left.</em>
-                            </ListItem>
-                        </List>
+                    </p>
+                    <List>
+                        <ListItem>
+                            <em>spend little, and</em>
+                        </ListItem>
+                        <ListItem>
+                            <em>invest what's left.</em>
+                        </ListItem>
+                    </List>
+                    <p>
                         After enough years, your investments will have grow in value, so that your fortune can support your
                         cost of living, year after year. If you are wondering why you should do that, I recommend the wonderful book of JL. Collins :
                         <a target='_blank' href='https://www.thesimplepathtowealth.com/'>The Simple Path to Wealth</a>. 
                     </p>
-                    <p>
-                        Let me give an example.
-                        <List>
-                            <ListItem>
-                                Say you need 20000$ a year to live correctly.
-                            </ListItem>
-                            <ListItem>
-                                You also earn 50000$ each year.
-                            </ListItem>
-                            <ListItem>
-                                Imagine you invest the remaining 30000$ each year in something that grows in value 
-                                by 8% each year, in average.
-                            </ListItem>
-                            <ListItem>
-                                After 11 years your fortune will have grow to roughly 540000$.                                
-                            </ListItem>
-                        </List>
-                    </p>
+                    <p>Let me give an example.</p>
+                    <List>
+                        <ListItem>
+                            Say you need 20000$ a year to live correctly.
+                        </ListItem>
+                        <ListItem>
+                            You also earn 50000$ each year.
+                        </ListItem>
+                        <ListItem>
+                            Imagine you invest the remaining 30000$ each year in something that grows in value 
+                            by 8% each year, in average.
+                        </ListItem>
+                        <ListItem>
+                            After 11 years your fortune will have grow to roughly 540000$.                                
+                        </ListItem>
+                    </List>
                     <p>
                         Using a well-known rule called the 
                         <a target='_blank' href='https://www.investopedia.com/terms/f/four-percent-rule.asp'>"4% rule"</a>,
@@ -70,14 +70,14 @@ const HelpPanel = () => {
                     </p>
                 </Typography>
             </Paper>
-            <Paper variant='solid-primary' sx={{ maxWidth : '40%', alignSelf : 'flex-start' }} >
+            <Paper variant='side-primary' sx={{ maxWidth : '40%', alignSelf : 'flex-start' }} >
                 <Typography variant='h4' fontWeight={'bold'}>How to use the app ?</Typography>
-                <ul>
-                    <li><Typography variant='body1'>Go to the Fast Sim tab, and get an idea about how spending little in order to invest
-                    the rest can help you reach financial independence.</Typography></li>
-                    <li><Typography variant='body1'>Use the Complete Sim feature to have complete customization
-                    power on the parameters of the simulation.</Typography></li>
-                </ul>
+                <List>
+                    <ListItem><Typography component='span' variant='body1'>Go to the Fast Sim tab, and get an idea about how spending little in order to invest
+                    the rest can help you reach financial independence.</Typography></ListItem>
+                    <ListItem><Typography component='span' variant='body1'>Use the Complete Sim feature to have complete customization
+                    power on the parameters of the simulation.</Typography></ListItem>
+                </List>
             </Paper>
         </>
     )

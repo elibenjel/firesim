@@ -4,10 +4,11 @@ module.exports = {
     whenCanIFIRE : (args) => {
         const { annualIncome, annualSpendings, igr, ir, reinvestDividends } = args;
         let yearsToRetire = 0;
-        const targetFortune = 25*Number(annualSpendings);
+        const targetFortune = parseInt((100 / 3) * Number(annualSpendings));
         const annualBenefits = Number(annualIncome) - Number(annualSpendings);
         let currentFortune = 0;
         let dividends = 0;
+        const fortuneGrowth = { targetFortune, startFortunes : [], endFortunes : [], dividends : [] };
 
         while (currentFortune < targetFortune) {
             yearsToRetire += 1;
@@ -15,11 +16,16 @@ module.exports = {
             if (reinvestDividends) {
                 currentFortune += dividends;
             }
-            currentFortune *= 1 + Number(igr)/100;
+            fortuneGrowth.startFortunes.push(parseInt(currentFortune));
+            
             dividends = currentFortune * Number(ir) / 100;
-            console.log(yearsToRetire, parseInt(currentFortune), parseInt(dividends), igr, ir)
+            fortuneGrowth.dividends.push(parseInt(dividends));
+            
+            currentFortune *= 1 + Number(igr) / 100;
+            fortuneGrowth.endFortunes.push(parseInt(currentFortune));
         }
 
-        return yearsToRetire;
+        fortuneGrowth.yearsToRetire = yearsToRetire;
+        return fortuneGrowth;
     }
 }

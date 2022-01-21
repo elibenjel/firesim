@@ -20,6 +20,7 @@ import {
     HelpIcon,
     AnalyticsIcon
 } from '@mui/icons-material';
+import CustomChart from '../CustomChart/CustomChart.jsx';
 
 const fieldInfo = {
     annualIncomeInput: {
@@ -143,26 +144,26 @@ const FastSimPanel = () => {
     
     const reinvestDividends = useRef(false);
 
-    const [yearsToRetire, setYearsToRetire] = useState(() => {
-        whenCanIFIRE({
-            annualIncome: annualIncomeInit,
-            annualSpendings: annualSpendingsInit,
-            igr: igrInit,
-            ir: irInit,
-            reinvestDividends : false
-        });
+    const fortuneGrowthInit = whenCanIFIRE({
+        annualIncome: annualIncomeInit,
+        annualSpendings: annualSpendingsInit,
+        igr: igrInit,
+        ir: irInit,
+        reinvestDividends : false
     });
 
+    const [fortuneGrowth, setFortuneGrowth] = useState(fortuneGrowthInit);
+
     const setYearsToRetireUtility = () => {
-        setYearsToRetire(
-        whenCanIFIRE({
+        const fortuneGrowth = whenCanIFIRE({
             annualIncome,
             annualSpendings,
             igr,
             ir,
             reinvestDividends: reinvestDividends.current
-        })
-    )};
+        });
+        setFortuneGrowth(fortuneGrowth);
+    };
 
     const [parameterValidity, dispatchParameterValidity] = useReducer((currentState, action) => {
         let newState = {...currentState};
@@ -179,11 +180,15 @@ const FastSimPanel = () => {
     }, true);
 
     const disabledProp = { disabled };
+    const chartSeries = [{
+        data : fortuneGrowth.endFortunes
+    }]
+
 
     return (
         <>
             <Paper elevation={0} sx = {{ p : 0, m : '16px 0 16px', position : 'sticky', top : 0, zIndex : 100 }} >
-                <Paper variant='filled-secondary' sx={{ m : 0, p : 1, height : '120px', overflow: 'auto', borderRadius : 0, textAlign : 'center' }} >
+                <Paper variant='filled-secondary' sx={{ m : 0, p : 1, height : '130px', overflow: 'auto', borderRadius : 0, textAlign : 'center' }} >
                     { currentFocus ?
                         <>
                             <Typography variant='h6' fontWeight={'bold'} >{fieldInfo[currentFocus]?.name}:</Typography>
@@ -191,8 +196,14 @@ const FastSimPanel = () => {
                         </>
                         :
                         <>
-                            <Typography variant='h6' fontWeight={'bold'} >Find the year of retirement you can expect if you adopt a FI/RE life style, based on the following parameters.</Typography>
-                            <Typography variant='body1' component='em'>(focus a parameter field to get details about it)</Typography>
+                            <Typography variant='h6' fontWeight={'bold'} >Find the year of retirement you can expect if you
+                            adopt a FI/RE life style, based on the following parameters.</Typography>
+                            <Typography variant='body1' >Although the simulation assume the 4% rule, which is now outdated,
+                            and invalid in the first place concerning an early retirement, it allows to grasp the idea.
+                            <p>
+                                <em>(focus a parameter field to get details about it)</em>
+                            </p>
+                            </Typography>
                         </>
                     }
                 </Paper>
@@ -201,8 +212,9 @@ const FastSimPanel = () => {
                 display: 'flex',
                 flexDirection: 'row',
                 alignItems: 'center',
+                justifyContent: 'space-around'
             }} >
-                <Paper variant='solid-primary' sx={{ maxWidth : '40%'}} >
+                <Paper variant='side-primary' reversed sx={{ maxWidth : '40%'}} >
                     <Typography variant='h4' fontWeight={'bold'}>Parameters</Typography>
                     <Box container sx={{
                         display: 'flex',
@@ -287,11 +299,23 @@ const FastSimPanel = () => {
                         />
                     </Box>
                 </Paper>
-                <Box sx={{ minWidth: '40%', alignSelf : 'flex-start', flex : 1, m : 4 }}>
+                <Box sx={{
+                    minWidth: '40%',
+                    alignSelf: 'flex-start',
+                    // flex: 1,
+                    // flexGrow: 0.5,
+                    // flexShrink: 2,
+                    m: 4,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'center',
+                    position: 'sticky',
+                    top: '140px'
+                }}>
                     <Paper variant='solid-primary' sx={{
                         mt : 0,
                         mb : 4,
-                        p : '0 16px 0',
+                        p : '0 24px 0',
                         display : 'flex',
                         justifyContent : 'space-between',
                         alignItems : 'center' }} >
@@ -307,6 +331,7 @@ const FastSimPanel = () => {
                                     }}
                                     onChange={(event) => {
                                         reinvestDividends.current = event.target.checked;
+                                        // setYearsToRetireUtility();
                                     }}/>
                                 }
                                 label='Reinvest dividends'
@@ -325,12 +350,37 @@ const FastSimPanel = () => {
                         </FormGroup>
                     </Paper>
                     <Typography variant='h4' fontWeight='bold' sx={{ textAlign : 'center'}} >Results</Typography>
-                    {yearsToRetire !== undefined && <Typography variant='h6' sx={{ textAlign : 'center'}} >You can retire {
-                        yearsToRetire === 0 ? 'immediately !' :
-                        (yearsToRetire === 1 ?
-                            'next year.' :
-                            `in ${yearsToRetire} years.`)
+                    {fortuneGrowth.yearsToRetire !== undefined && <Typography variant='h6' sx={{ textAlign : 'center'}} >
+                        You can retire {
+                        fortuneGrowth.yearsToRetire === 1 ? 'at the end of this year !' :
+                        (fortuneGrowth.yearsToRetire === 1 ?
+                            'next year !' :
+                            `in ${fortuneGrowth.yearsToRetire} years !`)
                     }</Typography>}
+                    <Paper
+                        variant='solid-primary'
+                        sx={{
+                            m: 2,
+                            p: 2,
+                            display: 'flex',
+                            flexDirection: 'column',
+                            justifyContent: 'center',
+                            height: '20%'
+                        }}
+                    >
+                    <Typography variant='caption' fontWeight={'bold'} sx={{ textAlign : 'center' }} >Fortune accumulated at the end of each years</Typography>
+                    <CustomChart
+                        series={chartSeries}
+                        width={'100%'}
+                        height={'70%'}
+                        layerWidth={950}
+                        layerHeight={600}
+                        viewBox='0 0 900 600'
+                        minY={0}
+                        maxY={Math.max(...fortuneGrowth.endFortunes)}
+                        ticks={fortuneGrowth.yearsToRetire}
+                    />
+                    </Paper>
                 </Box>
             </Box>
         </>

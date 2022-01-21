@@ -55,7 +55,8 @@ const paperVariantsMaker = {
                 linear-gradient(180deg, rgba(255, 255, 255, 0) 98%, ${myTheme.palette[suffix].dark} 100%),
                 linear-gradient(90deg, rgba(255, 255, 255, 0) 99%, ${myTheme.palette[suffix].dark} 100%),
                 linear-gradient(270deg, rgba(255, 255, 255, 0) 99%, ${myTheme.palette[suffix].dark} 100%),
-                linear-gradient(-45deg, rgba(255, 255, 255, 0) 90%, ${myTheme.palette[suffix].main} 100%)`,
+                linear-gradient(-45deg, rgba(255, 255, 255, 0) 90%, ${myTheme.palette[suffix].main} 100%),
+                linear-gradient(135deg, rgba(255, 255, 255, 0) 90%, ${myTheme.palette[suffix].main} 100%)`,
                 borderRadius: 4,
                 boxShadow: myTheme.shadows[5],
                 margin: 32,
@@ -71,11 +72,12 @@ const paperVariantsMaker = {
                 backgroundImage: `linear-gradient(90deg, ${myTheme.palette[suffix].light} 0%, ${myTheme.palette.background.paper} 15%)`,
                 borderTop: `thin solid`,
                 borderBottom: `1.5px solid`,
-                borderImage: `linear-gradient(to right, ${myTheme.palette[suffix].light} 20%, ${myTheme.palette.background.paper} 80%) 0.5`,
+                borderImage: `linear-gradient(to right, ${myTheme.palette[suffix].light} 20%, ${myTheme.palette[suffix].dark} 80%) 0.5`,
                 boxShadow: myTheme.shadows[0],
-                borderRadius: 0,
+                borderRadius: 8,
                 margin: 24,
-                padding: 32
+                padding: 32,
+                paddingLeft: 80
             }
         }
     },
@@ -87,9 +89,9 @@ const paperVariantsMaker = {
                 backgroundImage: `linear-gradient(-90deg, ${myTheme.palette[suffix].light} 0%, ${myTheme.palette.background.paper} 15%)`,
                 borderTop: `thin solid`,
                 borderBottom: `1.5px solid`,
-                borderImage: `linear-gradient(to left, ${myTheme.palette[suffix].light} 20%, ${myTheme.palette.background.paper} 80%) 0.5`,
+                borderImage: `linear-gradient(to left, ${myTheme.palette[suffix].light} 20%, ${myTheme.palette[suffix].dark} 80%) 0.5`,
                 boxShadow: myTheme.shadows[0],
-                borderRadius: 0,
+                borderRadius: 8,
                 margin: 24,
                 padding: 32,
                 paddingRight: 80
