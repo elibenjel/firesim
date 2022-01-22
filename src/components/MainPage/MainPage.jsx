@@ -11,10 +11,10 @@ import {
 } from '@mui/icons-material';
 import HelpPanel from '../HelpPanel/HelpPanel.jsx';
 import FastSimPanel from '../FastSimPanel/FastSimPanel.jsx';
+import { useTranslation } from 'react-i18next';
 
 const panels = [
     {
-        tabLabel: 'How To Use',
         panelID: 'how-to-use-panel',
         icon: <Help />,
         panel: <HelpPanel />,
@@ -25,7 +25,6 @@ const panels = [
         }
     },
     {
-        tabLabel: 'Fast Sim',
         panelID: 'fast-sim-panel',
         icon: <TrendingUp />,
         panel: <FastSimPanel />,
@@ -34,7 +33,6 @@ const panels = [
         }
     },
     {
-        tabLabel: 'Complete Sim',
         panelID: 'complete-sim-panel',
         icon: <Analytics />,
         panel: <HelpPanel />,
@@ -43,6 +41,8 @@ const panels = [
         }
     }
 ];
+
+let init = false
 
 const BasePanel = (props) => {
     const { children, selected, index, id, sx, ...other } = props;
@@ -67,6 +67,15 @@ const BasePanel = (props) => {
 
 const MainPage = () => {
     const [tab, setTab] = useState(0);
+    const { t } = useTranslation('translation', { keyPrefix: 'MainPage' });
+    if (!init){
+        panels.forEach((_, index) => {
+            const tradKey = `tabLabel${index+1}`;
+            panels[index].tabLabel = t(tradKey);
+            console.log(panels)
+        });
+        init = true;
+    }
 
     let { id } = useParams();
     console.log(window.innerWidth, window.outerWidth);

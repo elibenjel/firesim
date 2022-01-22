@@ -13,6 +13,12 @@ import {
 const CustomChart = (props) => {
     const { series, setSeries, width, height, minY, maxY, ticks, ...rest } = props;
     const theme = useTheme();
+    let factor = 1;
+    while ((maxY / factor) > 10) {
+        console.log(maxY, factor)
+        factor *= 10;
+    }
+    const mY = Math.ceil(maxY/factor)*factor;
 
     return (
         <Chart
@@ -20,7 +26,7 @@ const CustomChart = (props) => {
             height={height}
             series={series}
             minY={minY}
-            maxY={maxY}
+            maxY={mY}
             style={{
                 fontFamily: 'sans-serif',
                 fontSize: theme.typography.fontSize
@@ -44,7 +50,6 @@ const CustomChart = (props) => {
                     labelAttributes={{
                         x: -5
                     }}
-                    ticksLength={2}
                 />
                 <Ticks
                     axis="x"

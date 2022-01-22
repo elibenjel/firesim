@@ -15,7 +15,7 @@ const WelcomePage = ({setToken}) => {
             alignItems : 'center',
             margin: '0 auto'
         }}>
-            <Paper variant='filled-primary' sx={{
+            <Paper variant='rounded-primary' sx={{
                 maxWidth : '40%',
                 display: 'flex',
                 flexDirection: 'column',
@@ -34,8 +34,8 @@ const WelcomePage = ({setToken}) => {
                         }
                     },
                     animation: 'glow 2s ease-in-out infinite alternate'
-                }}>FIRESim</Box></Typography>
-                <Typography variant='h8' color={theme.palette.text.secondary} sx={{textAlign: 'center'}} >To begin, login and start a simulation.</Typography>
+                }}><br/>FIRESim</Box></Typography>
+                <Typography variant='h8' color={theme.palette.text.secondary} sx={{textAlign: 'center'}} >To begin, please login or create an account.</Typography>
             </Paper>
             <Paper variant='side-primary' sx={{ maxWidth : '40%'}} >
                 <AuthForm setToken={setToken}

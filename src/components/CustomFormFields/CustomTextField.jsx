@@ -42,7 +42,7 @@ const CustomTextField = ({
     }
 
     const onFocus = (event) => {
-        const currentVal = (event.target.value);// ? event.target.value : getStateUtility();
+        const currentVal = !select || event.target.value ? event.target.value : getStateUtility();
         setTargetID(id);
         setIsFocused(true);
         if (validateContent(currentVal)) {

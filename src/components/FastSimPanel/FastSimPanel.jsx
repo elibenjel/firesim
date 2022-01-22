@@ -21,83 +21,84 @@ import {
     AnalyticsIcon
 } from '@mui/icons-material';
 import CustomChart from '../CustomChart/CustomChart.jsx';
+import { useTranslation } from 'react-i18next';
 
 const fieldInfo = {
     annualIncomeInput: {
-        name: 'Annual income',
-        info: 'Represents the total amount of money earned each year (does not include the dividends related to the investments made).',
+        index: 1,
+        name: null,
+        info: null,
         validateF: (val) => {
             return val && !Number.isNaN(Number(val)) && val >= 0;
         },
         placeholder: 'ex: 30000',
-        helperText: 'A valid positive number (the higher the better)',
-        startAdornment: '$'
+        helperText: null,
+        startAdornment: null
     },
 
     annualSpendingsInput: {
-        name: 'Annual spendings',
-        info: 'How much of the annual income do you generally need for living during one year (house, food, hobbies, taxes...). A FI/RE life style implies making that value as small as possible.',
+        index: 2,
+        name: null,
+        info: null,
         validateF: (val) => {
             return val && !Number.isNaN(Number(val)) && val >= 0;
         },
         placeholder: 'ex: 15000',
-        helperText: 'A valid positive number (the smaller the better)',
-        startAdornment: '$'
+        helperText: null,
+        startAdornment: null
     },
 
     annualBenefitsInput: {
-        name: 'Annual benefits',
-        info: 'How much money do we have after spendings each year. The goal is to invest that money right away.',
+        index: 3,
+        name: null,
+        info: null,
         validateF: (val) => {
             return val && !Number.isNaN(Number(val)) && val >= 0;
         },
-        helperText: 'The difference between income and spendings (must be more than 0)',
-        startAdornment: '$'
+        helperText: null,
+        startAdornment: null
     },
 
     igrInput: {
-        name: 'Investment growth rate (IGR)',
-        info: 'How much your investments grow in 1 year. For simplicity, the simulation assume the IGR is constant over years,' +
-        ' takes the total value of the investments at the start of a year, and applies the IGR at the end of the same year. For example, ' +
-        'starting by investing 1000$ on 01/01/2022 with an IGR of 10% means those 1000$ will become (1000 x (1+0.1)) x (1+0.1) = 1210$ on 31/12/2024 (without accounting for dividends).',
+        index: 4,
+        name: null,
+        info: null,
         validateF: (val) => {
             return val && !Number.isNaN(Number(val));
         },
         placeholder: 'ex: 8',
-        helperText: 'A valid number',
+        helperText: null,
         startAdornment: '%'
     },
 
     irInput: {
-        name: 'Interest rate (IR)',
-        info: 'Determines the dividends you get every year from your investments. It is also assumed constant over years, and ' +
-        ' received at the end of each year based on the value of the investments at the start of the same year.',
+        index: 5,
+        name: null,
+        info: null,
         validateF: (val) => {
             return val && !Number.isNaN(Number(val));
         },
         placeholder: 'ex: 2',
-        helperText: 'A valid number',
+        helperText: null,
         startAdornment: '%'
     },
 
     roiInput: {
-        name: 'Return on investment',
-        info: 'The global return your investments bring you every year, both in terms of fortune growth and dividends. The IGR, IR ' +
-        'and ROI rates are merely simple assumptions. There is no way of knowing their real values in advance. We can base our expectations ' +
-        'either by averaging their values over the passed years, or by trying to measure the future potential of the investments made. ' +
-        'However, expectations remain uncertain.',
+        index: 6,
+        name: null,
+        info: null,
         validateF: (val) => {
             return val && Number(val);
         },
         placeholder: 'ex: 10',
-        helperText: 'The sum of IGR and IR',
+        helperText: null,
         startAdornment: '%'
     },
 
     reinvestDividendsSwitch: {
-        name: 'Reinvest dividends',
-        info: 'You can choose to keep the dividends each year for your personal use, or make the magic of compound dividends works ' +
-        ' by reinvesting them directly at the start of the following year. The second choice is more in phase with FI/RE principles.'
+        index: 7,
+        name: null,
+        info: null
     }
 }
 
@@ -128,8 +129,28 @@ const SimField = (props) => {
     )
 }
 
+let init = false;
+
 const FastSimPanel = () => {
     const theme = useTheme();
+    const { t } = useTranslation('translation', { keyPrefix: 'FastSimPanel' });
+    if (!init){
+        Object.entries(fieldInfo).map(([field, information]) => {
+            const index = information.index;
+            const tradKeys = { name : 'fn', info : 'info', helperText : 'ht', startAdornment : 'currency' };
+
+            Object.entries(information).map(([key, value]) => {
+                if (value === null) {
+                    const tradKey = (key === 'startAdornment') ? tradKeys[key] : `${tradKeys[key]}${index}`;
+                    fieldInfo[field][key] = t(tradKey);
+                }
+            });
+
+            console.log(fieldInfo)
+        });
+        init = true;
+    }
+
     const [currentFocus, setCurrentFocus] = useState(null);
     const [annualIncomeInit, annualSpendingsInit] = [30000, 15000];
     const annualBenefitsInit = annualIncomeInit - annualSpendingsInit;
@@ -188,7 +209,17 @@ const FastSimPanel = () => {
     return (
         <>
             <Paper elevation={0} sx = {{ p : 0, m : '16px 0 16px', position : 'sticky', top : 0, zIndex : 100 }} >
-                <Paper variant='filled-secondary' sx={{ m : 0, p : 1, height : '130px', overflow: 'auto', borderRadius : 0, textAlign : 'center' }} >
+                <Paper
+                    variant='filled-secondary'
+                    sx={{
+                        m: 0,
+                        p: 1,
+                        height: (2 + theme.typography.fontSize)*8,
+                        overflow: 'auto',
+                        borderRadius: 0,
+                        textAlign : 'center'
+                    }}
+                >
                     { currentFocus ?
                         <>
                             <Typography variant='h6' fontWeight={'bold'} >{fieldInfo[currentFocus]?.name}:</Typography>
@@ -196,13 +227,9 @@ const FastSimPanel = () => {
                         </>
                         :
                         <>
-                            <Typography variant='h6' fontWeight={'bold'} >Find the year of retirement you can expect if you
-                            adopt a FI/RE life style, based on the following parameters.</Typography>
-                            <Typography variant='body1' >Although the simulation assume the 4% rule, which is now outdated,
-                            and invalid in the first place concerning an early retirement, it allows to grasp the idea.
-                            <p>
-                                <em>(focus a parameter field to get details about it)</em>
-                            </p>
+                            <Typography variant='h6' fontWeight={'bold'} >{t('base-info1')}</Typography>
+                            <Typography variant='body1' >{t('base-info2')}<br/>
+                                <em>{t('base-info3')}</em>
                             </Typography>
                         </>
                     }
@@ -215,7 +242,7 @@ const FastSimPanel = () => {
                 justifyContent: 'space-around'
             }} >
                 <Paper variant='side-primary' reversed sx={{ maxWidth : '40%'}} >
-                    <Typography variant='h4' fontWeight={'bold'}>Parameters</Typography>
+                    <Typography variant='h4' fontWeight={'bold'}>{t('title1')}</Typography>
                     <Box container sx={{
                         display: 'flex',
                         flexDirection: 'column'
@@ -310,7 +337,7 @@ const FastSimPanel = () => {
                     flexDirection: 'column',
                     justifyContent: 'center',
                     position: 'sticky',
-                    top: '140px'
+                    top: (3 + theme.typography.fontSize)*8
                 }}>
                     <Paper variant='solid-primary' sx={{
                         mt : 0,
@@ -334,7 +361,7 @@ const FastSimPanel = () => {
                                         // setYearsToRetireUtility();
                                     }}/>
                                 }
-                                label='Reinvest dividends'
+                                label={fieldInfo.reinvestDividendsSwitch.name}
                                 
                             />
                         </FormGroup>
@@ -345,17 +372,17 @@ const FastSimPanel = () => {
                                     <PlayCircleFilledOutlined />
                                 </IconButton>
                             }
-                            label='Run'  
+                            label={t('run')}  
                         />
                         </FormGroup>
                     </Paper>
-                    <Typography variant='h4' fontWeight='bold' sx={{ textAlign : 'center'}} >Results</Typography>
+                    <Typography variant='h4' fontWeight='bold' sx={{ textAlign : 'center'}} >{t('title2')}</Typography>
                     {fortuneGrowth.yearsToRetire !== undefined && <Typography variant='h6' sx={{ textAlign : 'center'}} >
-                        You can retire {
-                        fortuneGrowth.yearsToRetire === 1 ? 'at the end of this year !' :
+                        {t('r1')}{
+                        fortuneGrowth.yearsToRetire === 1 ? t('r2') :
                         (fortuneGrowth.yearsToRetire === 1 ?
-                            'next year !' :
-                            `in ${fortuneGrowth.yearsToRetire} years !`)
+                            t('r3') :
+                            `${t('r4')}${fortuneGrowth.yearsToRetire}${t('r5')}`)
                     }</Typography>}
                     <Paper
                         variant='solid-primary'
@@ -368,7 +395,7 @@ const FastSimPanel = () => {
                             height: '20%'
                         }}
                     >
-                    <Typography variant='caption' fontWeight={'bold'} sx={{ textAlign : 'center' }} >Fortune accumulated at the end of each years</Typography>
+                    <Typography variant='caption' fontWeight={'bold'} sx={{ textAlign : 'center' }} >{t('caption')}</Typography>
                     <CustomChart
                         series={chartSeries}
                         width={'100%'}
