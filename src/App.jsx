@@ -78,7 +78,10 @@ const App = () => {
               <Routes>
                 <Route path='/' element={<WelcomePage setToken={(value) => (token.current = value)} />} />
                 {(!!token.current) ?
-                  <Route path='/home/:id' element={<MainPage />} />
+                  <>
+                    <Route path='/home' element={<MainPage tab={0} />} />
+                    <Route path='/fastsim' element={<MainPage tab={1} />} />
+                  </>
                   : <Route path='*' element={<Navigate replace to="/" />} />
                 }
               </Routes>

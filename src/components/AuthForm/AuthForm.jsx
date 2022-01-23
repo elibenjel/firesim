@@ -1,12 +1,12 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { Box, Button, FormControl, FormControlLabel, RadioGroup, Radio, Paper } from '@mui/material';
+import { Box, Button, FormControl, FormControlLabel, RadioGroup, Radio, MenuItem } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '@mui/material/styles';
 import { loginUser, signupUser } from '../../services/user.js';
 import { useEffect, useState, useRef, useReducer } from 'react';
 import { useMutation } from 'react-query';
-import CustomTextField from '../CustomFormFields/CustomTextField.jsx';
+import {CustomTextField, ValidatorField} from '../CustomFormFields/CustomTextField.jsx';
 
 const countries = [
     {
@@ -49,14 +49,13 @@ const AuthForm = ({setToken, sx}) => {
     const repassword = useRef('');
     const country = useRef('FR');
     const [userAction, setUserAction] = useState('login');
-    const enabler = useRef({});
-    const [enable, setEnable] = useState(false);
+    // const enabler = useRef({});
+    // const [enable, setEnable] = useState(false);
     const [errMsg, setErrMsg] = useState('');
     const setErr = (e) => {
         setErrMsg(e);
         setTimeout(() => setErrMsg(''), 5000);
     }
-    console.log(errMsg);
 
     const [formValidity, dispatchFormValidity] = useReducer((currentState, action) => {
         let newState = {...currentState};
@@ -109,10 +108,10 @@ const AuthForm = ({setToken, sx}) => {
         repassword.current = '';
     }
 
-    const onCountryChange = (event) => {
-        country.current = event.target.value;
-        country.current.length() ? setIsCountrySelected(true) : setIsCountrySelected(false);
-    }
+    // const onCountryChange = (event) => {
+    //     country.current = event.target.value;
+    //     country.current.length() ? setIsCountrySelected(true) : setIsCountrySelected(false);
+    // }
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -138,6 +137,15 @@ const AuthForm = ({setToken, sx}) => {
     }, true);
 
     const disabledProp = { disabled };
+
+    const getFieldProps = (id, label, placeholder, helperText, required=true) => ({
+        id,
+        label,
+        placeholder,
+        helperText,
+        color: 'secondary',
+        required
+    })
     
     return (
         <Box container
@@ -167,60 +175,65 @@ const AuthForm = ({setToken, sx}) => {
                     <FormControlLabel value={'signup'} control={<Radio color='secondary' />} label='Signup' />
                 </RadioGroup>
             </FormControl>
-            <CustomTextField item
-                id='emailInput'
-                variant='outlined'
-                name='Email'
+            <ValidatorField
+                fieldProps = {getFieldProps('emailInput', 'Email', '123@example.com', 'Enter a valid email')}
                 stateRef={email}
-                type='text'
                 validators={{
-                    isValid : () => formValidity.email,
                     setIsValid : (value) => dispatchFormValidity({issuer : 'email', value}),
                     validateContent : validateEmail
                 }}
-                placeholder='123@example.com'
-                helperText='Enter a valid email'
             />
-            <CustomTextField item
-                id='passwordInput'
-                variant='outlined'
-                name='Password'
+            <ValidatorField
+                fieldProps = {{ type : 'password', ...getFieldProps(
+                    'passwordInput',
+                    'Password',
+                    null,
+                    `Enter a password of ${passwordMinimumLength} characters minimum`
+                )}}
                 stateRef={password}
-                type='password'
                 validators={{
-                    isValid : () => formValidity.password,
-                    setIsValid : (value) => dispatchFormValidity({issuer : 'password', value}),
+                    setIsValid : (value) => dispatchFormValidity({ issuer : 'password', value }),
                     validateContent : validatePassword
                 }}
-                helperText={`Enter a password of ${passwordMinimumLength} characters minimum`}
             />
             {userAction === 'signup' ? 
             <>
-                <CustomTextField item
-                    id='repasswordInput'
-                    variant='outlined'
-                    name='Repeat password'
+                <ValidatorField
+                    fieldProps = {{ type : 'password', ...getFieldProps(
+                        'repasswordInput',
+                        'Repeat password',
+                        null,
+                        'Type your password again'
+                    )}}
                     stateRef={repassword}
-                    type='password'
                     validators={{
-                        isValid : () => formValidity.repassword,
                         setIsValid : (value) => dispatchFormValidity({issuer : 'repassword', value}),
                         validateContent : (rpwd) => validateRepassword(rpwd, password)
                     }}
-                    helperText='Type your password again'
                 />
-                <CustomTextField item
-                    id='countrySelect'
-                    variant='outlined'
-                    name='Country'
+                <ValidatorField
+                    fieldProps = {getFieldProps(
+                        'countrySelect',
+                        'Country',
+                        null,
+                        'Select the financial system you belong to among the following available countries'
+                    )}
                     stateRef={country}
-                    select
                     validators={{
-                        isValid : () => formValidity.country,
                         setIsValid : (value) => dispatchFormValidity({issuer : 'country', value})
                     }}
-                    selectOptions={countries}
-                    helperText='Select the financial system you belong to among the following available countries'
+                    select
+                    children={
+                        countries.map((option) => (
+                            <MenuItem
+                                key={option.value}
+                                value={option.value}
+                                disabled={!option.value}
+                            >
+                                {(option.value) ? option.label : <em>{option.label}</em>}
+                            </MenuItem>
+                        )
+                    )}
                 />
             </>
             : null}

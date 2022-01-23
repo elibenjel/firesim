@@ -1,5 +1,6 @@
 import React from 'react';
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import {
     Tabs,
     Tab,
@@ -19,15 +20,25 @@ import {
 } from '@mui/icons-material';
 
 
+function LinkTab(props) {
+    return (
+        <Tab
+            component={Link}
+            // onClick={(event) => {
+            //    event.preventDefault();
+            // }}
+            {...props}
+        />
+    );
+}
+
 const CustomAppBar = ({ panels, tab, setTab }) => {
     const [anchorEl, setAnchorEl] = useState(null);
 
     const theme = useTheme();
-    console.log(theme.palette);
 
     const handleChange = (event, newTab) => {
-        console.log(newTab);
-      setTab(newTab);
+    //   setTab(newTab);
     };
 
     const handleMenu = (event) => {
@@ -59,13 +70,14 @@ const CustomAppBar = ({ panels, tab, setTab }) => {
                 onChange={handleChange}
                 aria-label="basic tabs example"
             >
-                {panels.map(({ tabLabel, panelID, icon }, index) => {
+                {panels.map(({ tabLabel, to, panelID, icon }, index) => {
                     return (
-                        <Tab
+                        <LinkTab
                             key={index} id={`${panelID}-tab`}
                             label={tabLabel} aria-label={`tab labeled as ${tabLabel}`}
                             aria-controls={panelID}
                             icon={icon} iconPosition='start'
+                            to={to}
                         />
                     );
                 })}

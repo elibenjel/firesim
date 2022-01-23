@@ -15,10 +15,10 @@ const CustomChart = (props) => {
     const theme = useTheme();
     let factor = 1;
     while ((maxY / factor) > 10) {
-        console.log(maxY, factor)
         factor *= 10;
     }
     const mY = Math.ceil(maxY/factor)*factor;
+    console.log('render')
 
     return (
         <Chart
@@ -71,8 +71,6 @@ const CustomChart = (props) => {
                     }}
                 />
                 <Bars
-                    // groupPadding='0.5%'
-                    // innerPadding='2%'
                     colors={[theme.palette.primary.dark]}
                     barAttributes={{
                         onMouseMove: e => e.target.style.fillOpacity = 1,
