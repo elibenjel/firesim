@@ -1,14 +1,12 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useTheme } from '@mui/material/styles';
 import {
     Chart,
     Layer,
     Ticks,
     Bars,
-    Animate,
-    Handlers,
-    Dots
 } from 'rumble-charts';
+
 
 const CustomChart = (props) => {
     const { series, setSeries, width, height, minY, maxY, ticks, ...rest } = props;

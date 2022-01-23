@@ -1,20 +1,21 @@
-import React, {useState} from 'react';
-import { Button, Box} from '@mui/material';
-import { Link, useParams } from 'react-router-dom';
-// import { makeStyles } from '@material-ui/core/styles';
-import CustomAppBar from '../CustomAppBar/CustomAppBar.jsx';
+import React, { useRef } from 'react';
+import { useTranslation } from 'react-i18next';
+import { Box } from '@mui/material';
 import {
     TrendingUp,
     Help,
-    Analytics,
-    OndemandVideoOutlined
+    Analytics
 } from '@mui/icons-material';
-import HelpPanel from '../HelpPanel/HelpPanel.jsx';
+
+import CustomAppBar from '../CustomAppBar/CustomAppBar.jsx';
+import HelpPanel from '../HomePanel/HomePanel.jsx';
 import FastSimPanel from '../FastSimPanel/FastSimPanel.jsx';
-import { useTranslation } from 'react-i18next';
+import { initTrads } from '../../utils/translations.js';
 
 const panels = [
     {
+        index: 1,
+        tabLabel: null,
         panelID: 'home-panel',
         to: '/home',
         icon: <Help />,
@@ -26,6 +27,8 @@ const panels = [
         }
     },
     {
+        index: 2,
+        tabLabel: null,
         panelID: 'fast-sim-panel',
         to: '/fastsim',
         icon: <TrendingUp />,
@@ -35,6 +38,8 @@ const panels = [
         }
     },
     {
+        index: 3,
+        tabLabel: null,
         panelID: 'complete-sim-panel',
         to: '/home',
         icon: <Analytics />,
@@ -53,8 +58,6 @@ const BasePanel = (props) => {
     const { panel, panelID : id, sx,  } = panelProps;
 
     return (
-        // <>
-        //     {(selected === index) &&
         <Box container id={id} aria-labelledby={`${id}-tab`}
             sx={{
                 display: 'flex',
@@ -65,24 +68,17 @@ const BasePanel = (props) => {
         >
             { panel }
         </Box>
-        //     }
-        // </>
     )
 }
 
 const MainPage = ({ tab }) => {
-    // const [tab, setTab] = useState(0);
     const { t } = useTranslation('translation', { keyPrefix: 'MainPage' });
-    if (!init){
-        panels.forEach((_, index) => {
-            const tradKey = `tabLabel${index+1}`;
-            panels[index].tabLabel = t(tradKey);
-        });
-        init = true;
+    const didInit = useRef(false);
+    if (!didInit.current) {
+        panels.forEach((_, index) => initTrads({ t, source : panels[index] }));
+        didInit.current = true;
     }
 
-    // let { id } = useParams();
-    
     return (
         <Box container
             sx={{

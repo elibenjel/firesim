@@ -1,4 +1,6 @@
 import React, { useState, useRef, useReducer } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useTheme } from '@mui/material/styles';
 import {
     Box,
     Typography,
@@ -8,16 +10,13 @@ import {
     Switch,
     IconButton
 } from '@mui/material';
-import { useTheme } from '@mui/material/styles';
-import {
-    PlayCircleFilledOutlined
-} from '@mui/icons-material';
-import { useTranslation } from 'react-i18next';
+import { PlayCircleFilledOutlined } from '@mui/icons-material';
 
 import FastSimField from './FastSimField.jsx';
-import { fieldInfo, tradKeys } from "./utils.js";
 import CustomChart from '../CustomChart/CustomChart.jsx';
 import HelpBubbleWrapper from '../HelpBubbleWrapper/HelpBubbleWrapper.jsx';
+import { fieldInfo, getTradKeys } from "./utils.js";
+import { initTrads } from "../../utils/translations";
 import { whenCanIFIRE } from '../../services/computations.js';
 
 
@@ -26,34 +25,149 @@ const InfoBanner = (props) => {
 
     return (
         <Paper
-            variant='filled-secondary'
+            variant='simple'
             sx={{
                 p: 1,
                 m : '16px 0 16px',
+                borderRadius: 0,
                 textAlign : 'center'
             }}
         >
             <Typography variant='h6' fontWeight={'bold'} >{t('base-info1')}</Typography>
             <Typography variant='body1' >{t('base-info2')}</Typography>
         </Paper>
+    );
+}
+
+const ParameterPanel = (props) => {
+    const { tradHook: t,
+        annualIncome, setAnnualIncome, annualSpendings, setAnnualSpendings, annualBenefits,
+        igr, setIgr, ir, setIr, roi,
+        parameterValidity, dispatchParameterValidity
+    } = props;
+
+    const updateBenefits = (val, setState) => {
+        annualBenefits.current = annualIncome - val;
+        dispatchParameterValidity({
+            target : 'annualBenefitsInput',
+            value : fieldInfo.annualBenefitsInput.validateF(annualBenefits.current)
+        });
+        setState(val);
+    }
+
+    const updateRoi = (val, setState) => {
+        roi.current = igr - - val;
+        dispatchParameterValidity({
+            target : 'roiInput',
+            value : fieldInfo.roiInput.validateF(roi.current)
+        });
+        setState(val);
+    }
+
+    const validityProps = { validity : parameterValidity, dispatch : dispatchParameterValidity }
+
+    return (
+        <Paper variant='side-primary' reversed sx={{ maxWidth : '40%'}} >
+            <Typography variant='h4' fontWeight={'bold'}>{t('title1')}</Typography>
+            <Box container sx={{
+                display: 'flex',
+                flexDirection: 'column'
+            }} >
+                <FastSimField id={'annualIncomeInput'}
+                    state={annualIncome} setState={val => updateBenefits(val, setAnnualIncome)} {...validityProps} />
+                <FastSimField id='annualSpendingsInput'
+                    state={annualSpendings} setState={val => updateBenefits(val, setAnnualSpendings)} {...validityProps} />
+                <FastSimField readOnly id='annualBenefitsInput' sref={annualBenefits} {...validityProps} />
+                <FastSimField id='igrInput' state={igr} setState={val => updateRoi(val, setIgr)} {...validityProps} />
+                <FastSimField id='irInput' state={ir} setState={val => updateRoi(val, setIr)} {...validityProps} />
+                <FastSimField readOnly id='roiInput' sref={roi} {...validityProps} />
+            </Box>
+        </Paper>
+    );
+}
+
+const ControlBar = (props) => {
+    const { tradHook : t, reinvestDividends, setFortuneGrowthUtility, simulationFirstRun, ...disabledProp } = props;
+
+    return (
+        <Paper variant='solid-primary' sx={{
+            mt : 0, mb : 4, p : '0 24px 0',
+            display : 'flex',
+            justifyContent : 'space-between', alignItems : 'center'
+        }}>
+            <DividendsSwitch
+                tradHook={t}
+                id='reinvestDividendsSwitch'
+                onChange={(event) => {
+                    reinvestDividends.current = event.target.checked;
+                    if (!simulationFirstRun.current) setFortuneGrowthUtility();
+                }}
+            />
+            <FormGroup>
+                <FormControlLabel
+                    control={
+                        <IconButton size='small' color='primary' {...disabledProp}
+                            onClick={() => {
+                                simulationFirstRun.current = false;
+                                setFortuneGrowthUtility();
+                                }} >
+                            <PlayCircleFilledOutlined />
+                        </IconButton>
+                    }
+                    label={t('run')}  
+                />
+            </FormGroup>
+        </Paper>
+    )
+}
+
+const ResultPanel = (props) => {
+    const { tradHook : t, fortuneGrowth, simulationFirstRun, chartSeries } = props;
+
+    return (
+        <>
+            {fortuneGrowth ?
+            <>
+                <Typography variant='h4' fontWeight='bold' sx={{ textAlign : 'center'}} >{t('title2')}</Typography>
+                <Typography variant='h6' sx={{ textAlign : 'center'}} >
+                    {t('r1')}{
+                    fortuneGrowth.yearsToRetire === 1 ? t('r2') :
+                    (fortuneGrowth.yearsToRetire === 1 ?
+                        t('r3') :
+                        `${t('r4')}${fortuneGrowth.yearsToRetire}${t('r5')}`)
+                }</Typography>
+                <Paper
+                    variant='solid-primary'
+                    sx={{
+                        m: 2, p: 2,
+                        display: 'flex', flexDirection: 'column',
+                        justifyContent: 'center',
+                        visibility: simulationFirstRun.current ? 'hidden' : 'visible'
+                    }}
+                >
+                    <Typography variant='caption' fontWeight={'bold'} sx={{ textAlign : 'center' }} >{t('caption')}</Typography>
+                    <CustomChart
+                        series={chartSeries}
+                        width={'100%'} height={'70%'}
+                        layerWidth={950} layerHeight={600}
+                        viewBox='0 0 900 600'
+                        minY={0} maxY={Math.max(...fortuneGrowth.endFortunes)}
+                        ticks={fortuneGrowth.yearsToRetire}
+                    />
+                </Paper>
+            </>
+            : null}
+        </>
     )
 }
 
 const DividendsSwitch = (props) => {
-    const { id, onChange } = props;
-    const tradIndex = fieldInfo[id].index;
-    
-    const { t } = useTranslation('translation', { keyPrefix: 'FastSimPanel' });
-    Object.entries(fieldInfo[id]).map(
-        ([key, value]) => {
-            if (value === null) {
-                fieldInfo[id][key] = t(tradKeys[key](tradIndex));
-            }
-        }
-    )
+    const { tradHook : t, id, onChange } = props;
+    initTrads({ t, source : fieldInfo[id], getTradKeys })
         
     const label = fieldInfo[id].name;
     const info = fieldInfo[id].info;
+
     return (
         <HelpBubbleWrapper
             id={'reinvestDividensSwitch-bubble-info'}
@@ -78,35 +192,34 @@ const DividendsSwitch = (props) => {
 }
 
 const FastSimPanel = () => {
-    const theme = useTheme();
     const { t } = useTranslation('translation', { keyPrefix: 'FastSimPanel' });
+    const tradHook = t;
 
-    const [currentFocus, setCurrentFocus] = useState(null);
+    // used to hide the chart if the user has not yet run the simulation 
     const simulationFirstRun = useRef(true);
+
+    // initial values of the simulation
     const [annualIncomeInit, annualSpendingsInit] = [30000, 15000];
     const annualBenefitsInit = annualIncomeInit - annualSpendingsInit;
+    
+    // the two first input states must change the state of the third ref when they are updated
     const [annualIncome, setAnnualIncome] = useState(annualIncomeInit);
     const [annualSpendings, setAnnualSpendings] = useState(annualSpendingsInit);
     const annualBenefits = useRef(annualBenefitsInit);
 
+    // same thing here
     const [igrInit, irInit] = [8, 2]
     const [igr, setIgr] = useState(igrInit);
     const [ir, setIr] = useState(irInit);
     const roi = useRef(igrInit + irInit);
     
+    // state ref of the switch
     const reinvestDividends = useRef(false);
 
-    // const fortuneGrowthInit = whenCanIFIRE({
-    //     annualIncome: annualIncomeInit,
-    //     annualSpendings: annualSpendingsInit,
-    //     igr: igrInit,
-    //     ir: irInit,
-    //     reinvestDividends : false
-    // });
-
+    // main state variable of the simulation : rerun the sim when it is updated
     const [fortuneGrowth, setFortuneGrowth] = useState(null);
 
-    const setYearsToRetireUtility = () => {
+    const setFortuneGrowthUtility = () => {
         const fortuneGrowth = whenCanIFIRE({
             annualIncome,
             annualSpendings,
@@ -117,6 +230,7 @@ const FastSimPanel = () => {
         setFortuneGrowth(fortuneGrowth);
     };
 
+    // hold validity states of each parameters of the sim, to disable it if something is wrong
     const [parameterValidity, dispatchParameterValidity] = useReducer((currentState, action) => {
         let newState = {...currentState};
         newState[action.target] = action.value;
@@ -127,15 +241,28 @@ const FastSimPanel = () => {
         return next;
     }, {}));
 
+    // can the simulation be run or not
     const disabled = !Object.values(parameterValidity).reduce((prev, current) => {
         return current && prev;
     }, true);
 
     const disabledProp = { disabled };
+
+    // the data that must be shown
     const chartSeries = [{
         data : fortuneGrowth?.endFortunes
     }]
 
+    const parameterPanelProps = {
+        tradHook,
+        annualIncome, setAnnualIncome,
+        annualSpendings, setAnnualSpendings,
+        annualBenefits,
+        igr, setIgr,
+        ir, setIr,
+        roi,
+        parameterValidity, dispatchParameterValidity
+    }
 
     return (
         <>
@@ -146,91 +273,23 @@ const FastSimPanel = () => {
                 alignItems: 'center',
                 justifyContent: 'space-around'
             }} >
-                <Paper variant='side-primary' reversed sx={{ maxWidth : '40%'}} >
-                    <Typography variant='h4' fontWeight={'bold'}>{t('title1')}</Typography>
-                    <Box container sx={{
-                        display: 'flex',
-                        flexDirection: 'column'
-                    }} >
-                        <FastSimField
-                            id={'annualIncomeInput'}
-                            state={annualIncome}
-                            setState={(val) => {
-                                annualBenefits.current = val - annualSpendings;
-                                dispatchParameterValidity({
-                                    target : 'annualBenefitsInput',
-                                    value : fieldInfo.annualBenefitsInput.validateF(annualBenefits.current)
-                                });
-                                setAnnualIncome(val);
-                            }}
-                            validity={parameterValidity}
-                            dispatch={dispatchParameterValidity}
-                        />
-                        <FastSimField
-                            id='annualSpendingsInput'
-                            state={annualSpendings}
-                            setState={(val) => {
-                                annualBenefits.current = annualIncome - val;
-                                dispatchParameterValidity({
-                                    target : 'annualBenefitsInput',
-                                    value : fieldInfo.annualBenefitsInput.validateF(annualBenefits.current)
-                                });
-                                setAnnualSpendings(val);
-                            }}
-                            validity={parameterValidity}
-                            dispatch={dispatchParameterValidity}
-                        />
-                        <FastSimField
-                            id='annualBenefitsInput'
-                            sref={annualBenefits}
-                            validity={parameterValidity}
-                            dispatch={dispatchParameterValidity}
-                            disabled
-                        />
-                        <FastSimField
-                            id='igrInput'
-                            state={igr}
-                            setState={(val) => {
-                                roi.current = ir - - val;
-                                dispatchParameterValidity({
-                                    target : 'roiInput',
-                                    value : fieldInfo.roiInput.validateF(roi.current)
-                                });
-                                setIgr(val);
-                            }}
-                            validity={parameterValidity}
-                            dispatch={dispatchParameterValidity}
-                        />
-                        <FastSimField
-                            id='irInput'
-                            state={ir}
-                            setState={(val) => {
-                                roi.current = igr - - val;
-                                dispatchParameterValidity({
-                                    target : 'roiInput',
-                                    value : fieldInfo.roiInput.validateF(roi.current)
-                                });
-                                setIr(val);
-                            }}
-                            validity={parameterValidity}
-                            dispatch={dispatchParameterValidity}
-                        />
-                        <FastSimField
-                            id='roiInput'
-                            sref={roi}
-                            validity={parameterValidity}
-                            dispatch={dispatchParameterValidity}
-                            disabled
-                        />
-                    </Box>
-                </Paper>
+                <ParameterPanel {...parameterPanelProps} />
                 <Box sx={{
+                    m: 4,
+                    minWidth: '40%', maxHeight: '100vh',
+                    position: 'sticky', top: 40,
+                    alignSelf: 'flex-start',
+                    display: 'flex', flexDirection: 'column',
+                    justifyContent: 'center'
+                }}>
+                <ControlBar
+                    {...{ tradHook, setFortuneGrowthUtility, reinvestDividends, simulationFirstRun, ...disabledProp }}
+                />
+                <ResultPanel {...{ tradHook, fortuneGrowth, chartSeries, simulationFirstRun }} />
+                {/* <Box sx={{
                     minWidth: '40%',
                     maxHeight: '100vh',
                     alignSelf: 'flex-start',
-                    // flex: 1,
-                    // flexGrow: 0.5,
-                    // flexShrink: 2,
                     m: 4,
                     display: 'flex',
                     flexDirection: 'column',
@@ -249,7 +308,7 @@ const FastSimPanel = () => {
                         id='reinvestDividendsSwitch'
                         onChange={(event) => {
                             reinvestDividends.current = event.target.checked;
-                            if (!simulationFirstRun.current) setYearsToRetireUtility();
+                            if (!simulationFirstRun.current) setFortuneGrowthUtility();
                         }}
                         />
                         <FormGroup>
@@ -258,7 +317,7 @@ const FastSimPanel = () => {
                                 <IconButton size='small' color='primary' {...disabledProp}
                                 onClick={() => {
                                     simulationFirstRun.current = false;
-                                    setYearsToRetireUtility();
+                                    setFortuneGrowthUtility();
                                     }} >
                                     <PlayCircleFilledOutlined />
                                 </IconButton>
@@ -305,8 +364,9 @@ const FastSimPanel = () => {
                     </>
                     : null
                 }
-                </Box>
+                </Box> */}
             </Box>
+        </Box>
         </>
     )
 }

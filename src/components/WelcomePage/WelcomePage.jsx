@@ -1,8 +1,9 @@
 import React from 'react';
+import { useTheme } from '@mui/material/styles';
 import { Box, Typography, Paper } from '@mui/material';
+
 import Background from '../Background/Background.jsx'
 import AuthForm from '../AuthForm/AuthForm.jsx';
-import { useTheme } from '@mui/material/styles';
 
 const WelcomePage = ({setToken}) => {
     const theme = useTheme();

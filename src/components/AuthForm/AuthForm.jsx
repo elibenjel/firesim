@@ -1,12 +1,20 @@
-import React from 'react';
+import React, { useEffect, useState, useRef, useReducer } from 'react';
 import PropTypes from 'prop-types';
-import { Box, Button, FormControl, FormControlLabel, RadioGroup, Radio, MenuItem } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import { useTheme } from '@mui/material/styles';
-import { loginUser, signupUser } from '../../services/user.js';
-import { useEffect, useState, useRef, useReducer } from 'react';
 import { useMutation } from 'react-query';
-import {CustomTextField, ValidatorField} from '../CustomFormFields/CustomTextField.jsx';
+import { useTheme } from '@mui/material/styles';
+import {
+    Box,
+    Button,
+    FormControl,
+    FormControlLabel,
+    RadioGroup,
+    Radio,
+    MenuItem
+} from '@mui/material';
+
+import { loginUser, signupUser } from '../../services/user.js';
+import ValidatorField from '../ValidatorField/ValidatorField.jsx';
 
 const countries = [
     {

@@ -79,21 +79,9 @@ export const fieldInfo = {
     }
 }
 
-export const tradKeys = {
+export const getTradKeys = {
     name: (i) => `fn${i}`,
     info: (i) => `info${i}`,
     helperText: (i) => `ht${i}`,
     startAdornment: () => 'currency'
 };
-
-export const initTrads = ({ t, id }) => {
-    const information = fieldInfo[id];
-    const index = fieldInfo[id].index;
-    
-    Object.entries(information).map(([key, value]) => {
-        if (value === null) {
-            const tradKey = tradKeys[key](index);
-            fieldInfo[id][key] = t(tradKey);
-        }
-    });
-}

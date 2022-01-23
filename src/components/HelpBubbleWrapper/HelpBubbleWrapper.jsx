@@ -1,6 +1,7 @@
 import React from 'react';
 import { Box, Popper, Fade, Paper, Typography } from '@mui/material';
 
+
 const BubbleInfo = (props) => {
     const { content, ...popperProps } = props;
 
@@ -8,7 +9,7 @@ const BubbleInfo = (props) => {
         <Popper placement='right-end' transition {...popperProps} >
         {({ TransitionProps }) => (
           <Fade {...TransitionProps} timeout={500} >
-            <Paper variant='rounded-secondary' sx={{ p : 1, maxWidth : '20rem' }}>
+            <Paper variant='simple' sx={{ p : '4px 24px 4px', maxWidth : '20rem' }}>
                 <Typography variant='body2' sx={{ textAlign : 'justify' }}>
                     {content}
                 </Typography>

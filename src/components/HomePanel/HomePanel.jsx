@@ -1,4 +1,6 @@
 import React from 'react';
+import { useTheme } from '@mui/material/styles';
+import { useTranslation } from 'react-i18next';
 import {
     Typography,
     Paper,
@@ -6,12 +8,10 @@ import {
     ListItem,
     ListItemIcon,
     ListItemText,
-    Link,
     Box
 } from '@mui/material';
 import { ArrowRightRounded } from '@mui/icons-material';
-import { useTheme } from '@mui/material/styles';
-import { useTranslation } from 'react-i18next';
+
 
 const BulletItem = (props) => {
     const { children } = props;
@@ -25,19 +25,23 @@ const BulletItem = (props) => {
 
 const HelpPanel = () => {
     const theme = useTheme();
-    const { t } = useTranslation('translation', { keyPrefix: 'HelpPanel' });
+    const { t } = useTranslation('translation', { keyPrefix: 'HomePanel' });
 
     return (
         <Box
             sx={{
                 display: 'flex',
                 flexDirection: 'column',
-                m: 0,
+                m: '0 24px 0',
                 p: 0
             }}
         >
-            <Paper variant='filled-secondary' sx={{ m: '32px 0 0' }} >
-                <Typography variant='h4' fontWeight='bold'>{t('title1')}</Typography>
+            <Paper variant='simple' sx={{ p : 8 }} >
+                <Typography variant='h4' fontWeight='bold'>
+                    {t('title1')}<Typography variant='h4' component='span' fontWeight='bold' color={theme.palette.primary.main}>
+                        {t('title-app')}</Typography> ?
+                </Typography>
+                
                 <Typography variant='body2' component='div' sx={{ textAlign : 'justify' }} >
                     <p>{t('p1')}</p>
                     <p>{t('p2')}</p>

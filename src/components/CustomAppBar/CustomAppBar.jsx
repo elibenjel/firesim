@@ -1,6 +1,7 @@
 import React from 'react';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useTheme } from '@mui/material/styles';
 import {
     Tabs,
     Tab,
@@ -10,13 +11,9 @@ import {
     MenuItem,
     IconButton
 } from '@mui/material';
-import { useTheme } from '@mui/material/styles';
 import {
     AccountCircle,
-    TrendingUp,
     Whatshot,
-    Help,
-    Analytics
 } from '@mui/icons-material';
 
 

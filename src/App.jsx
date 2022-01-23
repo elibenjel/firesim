@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useRef } from 'react';
 import {
   BrowserRouter as Router,
   Routes,
@@ -7,61 +7,15 @@ import {
 } from 'react-router-dom';
 import { QueryClientProvider, QueryClient } from 'react-query';
 import { ReactQueryDevtools } from 'react-query/devtools';
-import WelcomePage from './components/WelcomePage/WelcomePage.jsx';
-import MainPage from './components/MainPage/MainPage.jsx';
 import { CssBaseline } from '@mui/material';
 import { ThemeProvider } from '@mui/material/styles';
+
+import WelcomePage from './components/WelcomePage/WelcomePage.jsx';
+import MainPage from './components/MainPage/MainPage.jsx';
 import myTheme from './theme.js';
 
-const queryClient = new QueryClient();
 
-// const theme = createTheme({
-//   palette: {
-//       primary: {
-//           main: red['A700'],
-//       },
-//       secondary: {
-//           main: blue[900],
-//           // '&:hover': {
-//           //   main: 'red'
-//           // }
-//       },
-//       error: {
-//         main: red['A700'],
-//       },
-//   },
-//   components:{
-//     MuiCssBaseline: {
-//       styleOverrides: {
-//         html: {
-//           // colorScheme: 'dark'
-//         },
-//         body: {
-//           // backgroundColor: '#000'
-//           minWidth: '60rem',
-//           backgroundImage: function() {return `linear-gradient(to top, white 70%, ${this.palette.primary.dark} 70%)`;} 
-//         }
-//       }
-//     }
-//   }
-  
-//   // overrides: {
-//   //   MuiCssBaseline: {
-//   //     "@global": {
-//   //       "*::-webkit-scrollbar": {
-//   //         width: "10px"
-//   //       },
-//   //       "*::-webkit-scrollbar-track": {
-//   //         background: "#E4EFEF"
-//   //       },
-//   //       "*::-webkit-scrollbar-thumb": {
-//   //         background: "#1D388F61",
-//   //         borderRadius: "2px"
-//   //       }
-//   //     }
-//   //   }
-//   // }
-// });
+const queryClient = new QueryClient();
 
 const App = () => {
   const token = useRef(null);

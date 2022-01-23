@@ -1,18 +1,19 @@
-import React, { useEffect, useRef, useState } from "react";
-import { useTheme } from '@mui/material/styles';
-import { ValidatorField } from '../CustomFormFields/CustomTextField.jsx';
+import React, { useRef } from "react";
 import { useTranslation } from 'react-i18next';
-import { Box } from "@mui/material";
-import { fieldInfo, initTrads, tradKeys } from "./utils.js";
+
+import ValidatorField from '../ValidatorField/ValidatorField.jsx';
+import { fieldInfo, getTradKeys } from "./utils.js";
+import { initTrads } from "../../utils/translations";
+
 
 export const FastSimField = (props) => {
-    const { id, sref, state, setState, validity, dispatch, disabled, ...other } = props;
+    const { id, sref, state, setState, validity, dispatch, readOnly, ...other } = props;
     
     const { t } = useTranslation('translation', { keyPrefix: 'FastSimPanel' });
     const didInit = useRef(null);
     
     if (!didInit.current) {
-        initTrads({t, id});
+        initTrads({ t, source : fieldInfo[id], getTradKeys });
         didInit.current = true;
     }
     
@@ -28,7 +29,7 @@ export const FastSimField = (props) => {
                 placeholder,
                 helperText,
                 required: false,
-                disabled
+                readOnly
             }}
             adornments={{
                 startAdornment,
