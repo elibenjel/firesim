@@ -7,13 +7,19 @@ availableLanguages.forEach((lang) => cache[lang] = {});
 
 function importAll(r) {
     r.keys().forEach((key) => {
-        const [_, nested, __, lang, ___] = key.split('.').at(-2).split('/');
-        cache[lang][nested] = r(key);
-    })
+        console.log(key);
+        const temp = key.split('.').at(-2).split('/');
+        temp.reverse();
+        console.log(temp);
+        const [lang, _, ns, ...rest] = temp;
+        const namespace = ns || 'translation';
+        cache[lang][namespace] = r(key);
+    });
 }
 
 
 importAll(require.context('components', true, /^(?!components).*\.json$/));
+importAll(require.context('pages', true, /^(?!pages).*\.json$/));
 console.log(cache)
 
 // the translations

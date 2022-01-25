@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import i18next from 'i18next';
+import { useTranslation } from 'react-i18next';
+import { useLocation } from 'react-router-dom';
 import {
     Box,
     Tabs,
@@ -9,10 +10,11 @@ import {
     IconButton
 } from '@mui/material';
 import {
-    AccountCircle,
+    Language,
     Whatshot,
     TrendingUp,
-    Help
+    Home,
+    Analytics
 } from '@mui/icons-material';
 
 import LinkTab from './LinkTab.jsx';
@@ -20,29 +22,35 @@ import LinkTab from './LinkTab.jsx';
 const tabs = [
     {
         name: 'home',
-        label: i18next.t('tab1', { ns : 'Navigation'}),
+        label: (t) => t('tab1'),
         to: '/home',
-        icon: <Help />
+        icon: <Home />
     },
     {
         name: 'fastsim',
-        label: i18next.t('tab2', { ns : 'Navigation'}),
+        label: (t) => t('tab2'),
         to: '/fastsim',
         icon: <TrendingUp />
+    },
+    {
+        name: 'mainsim',
+        label: (t) => t('tab3'),
+        to: '/mainsim',
+        icon: <Analytics />
     }
 ];
 
-
 const CustomAppBar = (props) => {
-    const { selected } = props;
+    const { selected, setLanguage } = props;
+    const { t } = useTranslation('Navigation');
     const [anchorEl, setAnchorEl] = useState(null);
+    const location = useLocation();
 
-    const lastActiveIndex = Number(localStorage.getItem('lastActiveIndex-CustomAppBar'));
-    console.log(lastActiveIndex)
-    const [activeIndex, setActiveIndex] = useState(lastActiveIndex || (selected in tabs ? selected : 0));
+    const initialActiveIndex = tabs.findIndex(tab => (tab.to === location.pathname));
+
+    const [activeIndex, setActiveIndex] = useState(initialActiveIndex || (selected in tabs ? selected : 0));
 
     const handleChange = (event, newValue) => {
-        localStorage.setItem('lastActiveIndex-CustomAppBar', newValue);
         setActiveIndex(newValue);
     };
 
@@ -50,7 +58,8 @@ const CustomAppBar = (props) => {
         setAnchorEl(event.currentTarget);
     };
 
-    const handleClose = () => {
+    const handleClose = (lng) => {
+        setLanguage(lng);
         setAnchorEl(null);
     };
 
@@ -61,7 +70,7 @@ const CustomAppBar = (props) => {
             width: '150px',
             height: '100vh'
         }}>
-        <AppBar position="sticky" sx={{
+        <AppBar position="static" sx={{
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
@@ -87,7 +96,7 @@ const CustomAppBar = (props) => {
                     return (
                         <LinkTab
                             key={index} id={`${name}-tab`}
-                            label={label} aria-label={`tab labeled as ${label}`}
+                            label={label(t)} aria-label={`tab labeled as ${label(t)}`}
                             aria-controls={`${to} page`}
                             icon={icon} iconPosition='start'
                             to={to}
@@ -105,7 +114,7 @@ const CustomAppBar = (props) => {
                     color="inherit"
                     sx={{ m : '0 1rem 0' }}
                 >
-                    <AccountCircle />
+                    <Language />
                 </IconButton>
                 <Menu
                     id="menu-appbar"
@@ -122,8 +131,8 @@ const CustomAppBar = (props) => {
                     open={!!anchorEl}
                     onClose={handleClose}
                 >
-                    <MenuItem onClick={handleClose}>Profile</MenuItem>
-                    <MenuItem onClick={handleClose}>My account</MenuItem>
+                    <MenuItem onClick={() => handleClose('fr')}>Français</MenuItem>
+                    <MenuItem onClick={() => handleClose('en')}>English</MenuItem>
                 </Menu>
             </Box>
         </AppBar>

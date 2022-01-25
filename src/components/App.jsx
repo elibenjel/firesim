@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useState, useRef } from 'react';
 
 import { QueryClientProvider, QueryClient } from 'react-query';
 import { ReactQueryDevtools } from 'react-query/devtools';
@@ -8,11 +8,18 @@ import { ThemeProvider } from '@mui/material/styles';
 
 import AppRouter from './Navigation/AppRouter.jsx';
 import myTheme from '../utils/theme.js';
+import i18next from 'i18next';
 
 
 const queryClient = new QueryClient();
 
 const App = () => {
+  const [language, setLanguage] = useState('fr');
+  const setLanguageUtility = (lng) => {
+    i18next.changeLanguage(lng);
+    setLanguage(lng);
+  }
+
   const token = useRef(null);
   if (!token.current) {
     token.current = window.localStorage.getItem('token');
@@ -23,7 +30,7 @@ const App = () => {
     <QueryClientProvider client={queryClient} >
       <ThemeProvider theme={myTheme}>
       <CssBaseline enableColorScheme />
-      <AppRouter token={token} />
+      <AppRouter token={token} setLanguage={setLanguageUtility} />
       <ReactQueryDevtools initialIsOpen={false} position='bottom-right' />
       </ThemeProvider>
     </QueryClientProvider>

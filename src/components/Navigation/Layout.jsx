@@ -1,20 +1,22 @@
 import React from 'react';
 import { Box } from '@mui/material';
 import CustomAppBar from './CustomAppBar.jsx';
+import { useLocation } from 'react-router-dom';
 
 const Layout = (props) => {
-    const { children } = props;
-    // const history = useHistory();
+    const { setLanguage, children } = props;
+    const location = useLocation();
 
     return (
-        <>
-        <Box sx={{ display: 'flex', flexDirection : 'row', width : '100%', height : '100%' }} >
-            <CustomAppBar />
-            <Box id={'testid'} sx={{ maxWidth: '800px' }}>
-                {children}
-            </Box>
+        <Box sx={{
+            display: 'flex', flexDirection: 'row',
+            // alignItems: 'center',
+            width: '100%', height: '100%',
+            m: 'auto'
+        }}>
+            {(location.pathname === '/') || <CustomAppBar setLanguage={setLanguage} />}
+            {children}
         </Box>
-        </>
     );
 }
 

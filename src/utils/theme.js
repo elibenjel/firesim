@@ -216,10 +216,10 @@ myTheme.components = {
             },
             '.wrapper-size-specifier': {
                 minHeight: '100vh',
-                minWidth: '700px',
-                // height: '100vh',
-                width: '100%',
-                display: 'inline-flex'
+                minWidth: '99vw',
+                // // height: '100vh',
+                // width: '100%',
+                display: 'flex'
             }
         }
     },
