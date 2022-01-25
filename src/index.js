@@ -2,7 +2,7 @@ import React from 'react';
 import { render } from 'react-dom';
 import './i18n';
 
-import App from './App.jsx';
+import App from './components/App.jsx';
 
 function component() {
     const element = document.createElement('div');
