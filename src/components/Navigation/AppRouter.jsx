@@ -9,6 +9,7 @@ import Layout from './Layout.jsx';
 import WelcomeScreen from '../../pages/WelcomeScreen.jsx';
 import Home from '../../pages/Home.jsx';
 import FastSim from '../../pages/FastSim.jsx';
+import MainSim from '../../pages/MainSim.jsx';
 import NotFound from '../../pages/NotFound.jsx';
 
 const AppRouter = ({ token, setLanguage }) => {
@@ -22,7 +23,7 @@ const AppRouter = ({ token, setLanguage }) => {
                     <>
                         <Route path='/home' element={<Home />} />
                         <Route path='/fastsim' element={<FastSim />} />
-                        {/* <Route path='/mainsim' element={<NotFound />} /> */}
+                        <Route path='/mainsim/*' element={<MainSim />} />
                         <Route path='*' element={<NotFound />} />
                     </>
                     : <Route path='*' element={<Navigate replace to="/" />} />

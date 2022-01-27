@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
+import { useTheme } from '@mui/material/styles';
 import {
     Box,
     Tabs,
@@ -46,7 +47,7 @@ const CustomAppBar = (props) => {
     const [anchorEl, setAnchorEl] = useState(null);
     const location = useLocation();
 
-    const initialActiveIndex = tabs.findIndex(tab => (tab.to === location.pathname));
+    const initialActiveIndex = tabs.findIndex(tab => (location.pathname.match(new RegExp(`^${tab.to}`))));
 
     const [activeIndex, setActiveIndex] = useState(initialActiveIndex || (selected in tabs ? selected : 0));
 
@@ -67,8 +68,9 @@ const CustomAppBar = (props) => {
         <Box sx={{
             position: 'sticky',
             top: 0,
-            width: '150px',
-            height: '100vh'
+            width: (theme) => theme.cssVariables.appBarWidth,
+            height: '100vh',
+            zIndex: (theme) => theme.zIndex.drawer + 1
         }}>
         <AppBar position="static" sx={{
             display: 'flex',
@@ -89,7 +91,7 @@ const CustomAppBar = (props) => {
                 variant='scrollable'
                 value={activeIndex}
                 onChange={handleChange}
-                aria-label="basic tabs example"
+                aria-label='navigation tabs'
                 sx={{ width : '100%'}}
             >
                 {tabs.map(({ name, label, to, icon }, index) => {

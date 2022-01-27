@@ -174,25 +174,6 @@ myTheme.components = {
             // }
         },
     },
-    
-    // MuiTab: {
-    //     styleOverrides: {
-    //         root: {
-                
-    //         },
-    //     }
-    // },
-
-    // Mui: {
-    //     styleOverrides: {
-    //         selected : {
-    //             backgroundColor: myTheme.palette.grey[50],
-    //             borderRadius: 2,
-    //             fontWeight: 'bold',
-    //             m: 1
-    //         },
-    //     }
-    // },
 
     // MuiTabScrollButton: {
     //     styleOverrides: {
@@ -223,6 +204,10 @@ myTheme.components = {
             }
         }
     },
+}
+
+myTheme.cssVariables = {
+    appBarWidth : 150,
 }
 
 export default myTheme;
