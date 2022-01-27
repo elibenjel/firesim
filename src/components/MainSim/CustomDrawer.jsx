@@ -62,6 +62,8 @@ const CustomDrawer = (props) => {
 
     const drawerHeight = 80;
     const rightGutter = 50;
+    const heightTransitionOut = (theme) => theme.transitions.duration.leavingScreen - 50;
+    const heightTransitionIn = (theme) => theme.transitions.duration.enteringScreen + 50;
 
     return (
         <>
@@ -72,7 +74,10 @@ const CustomDrawer = (props) => {
                 PaperProps={{
                     sx: { p : 1, border : 'none', backgroundColor : 'rgb(0 0 0 / 0%)' }
                 }}
-                sx={{ height : drawerHeight }}
+                sx={{
+                    minHeight : open ? drawerHeight : 0,
+                    transition: (theme) => `min-height ${(open ? heightTransitionOut(theme) : heightTransitionIn(theme))}ms`,
+                }}
             >
                 <Box sx={{
                     pl: (theme) => `${theme.cssVariables.appBarWidth}px`, pr: `${rightGutter}px`,

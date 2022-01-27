@@ -1,7 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { useLocation } from 'react-router-dom';
-import { Box } from '@mui/material';
+import { Route, Routes, useMatch } from 'react-router-dom';
+import { Box, Paper } from '@mui/material';
 
 import CustomDrawer from '../components/MainSim/CustomDrawer.jsx';
 
@@ -15,6 +15,14 @@ const MainSim = (props) => {
             width: '100%', height: '100%'
         }}>
             <CustomDrawer tradHook={tradHook} />
+            <Box sx>
+            <Routes>
+                <Route path='' element={<Paper>'Mainpage'</Paper>} />
+                <Route path='spendings' element={'spendings'} />
+                <Route path='market' element={'market'} />
+                <Route path='howto' element={'howto'} />
+            </Routes>
+            </Box>
         </Box>
     );
 }
