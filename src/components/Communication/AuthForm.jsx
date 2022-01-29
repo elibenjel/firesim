@@ -10,11 +10,13 @@ import {
     FormControlLabel,
     RadioGroup,
     Radio,
-    MenuItem
+    MenuItem,
+    TextField
 } from '@mui/material';
 
 import { loginUser, signupUser } from '../../services/user.js';
-import ValidatorField from '../Input/ValidatorField.jsx';
+import ValidatorWrapper from '../InformationDisplay/ValidatorWrapper.jsx';
+// import ValidatorField from '../Input/ValidatorField.jsx';
 
 const countries = [
     {
@@ -45,9 +47,49 @@ const validateRepassword = (repassword, refToPassword) => {
     return rpwdLength >= 10 && rpwdLength === refToPassword.current.length;
 }
 
-// const useLogin = (args) => {
-//     return useMutation(loginUser, args);
-// }
+const FormField = (props) => {
+    const {
+        tradHook : t,
+        id, value,
+        setState = () => null, validateF = () => true,
+        readOnly,
+        externalValidityControl,
+        label, placeholder, helperText, startAdornment, helpBubble,
+        ...other
+    } = props;
+
+    const onFocus = ({ setChildrenIsValid, setHide }) => (event) => {
+        setChildrenIsValid && setChildrenIsValid(validateF(event.target.value));
+        setHide && setHide(false);
+    }
+
+    const onBlur = ({ setChildrenIsValid, setHide }) => (event) => setHide && setHide(true);
+
+    const onChange = ({ setChildrenIsValid, setHide }) => (event) => {
+        setState(event.target.value);
+        onFocus({ setChildrenIsValid, setHide })(event);
+    }
+
+    const fieldProps = (args) => ({
+        id, value, variant: 'filled', label, placeholder, helperText, readOnly,
+        onFocus: onFocus(args), onBlur: onBlur(args), onChange: onChange(args)
+    });
+
+    return (
+        <ValidatorWrapper externalValidityControl={externalValidityControl} {...other} >
+            {
+                (args) => (
+                    <TextField
+                        variant='outlined'
+                        size='small'
+                        {...fieldProps(args)}
+                        {...other}
+                    />
+                )
+            }
+        </ValidatorWrapper>
+    )
+}
 
 const AuthForm = ({setToken, sx}) => {
     const navigate = useNavigate();
@@ -183,53 +225,58 @@ const AuthForm = ({setToken, sx}) => {
                     <FormControlLabel value={'signup'} control={<Radio color='secondary' />} label='Signup' />
                 </RadioGroup>
             </FormControl>
-            <ValidatorField
-                fieldProps = {getFieldProps('emailInput', 'Email', '123@example.com', 'Enter a valid email')}
-                stateRef={email}
-                validators={{
-                    setIsValid : (value) => dispatchFormValidity({issuer : 'email', value}),
-                    validateContent : validateEmail
-                }}
+            <FormField
+                {...getFieldProps('emailInput', 'Email', '123@example.com', 'Enter a valid email')}
+                value={email.current}
+                validateF={validateEmail}
+                // validators={{
+                //     setIsValid : (value) => dispatchFormValidity({issuer : 'email', value}),
+                //     validateContent : validateEmail
+                // }}
             />
-            <ValidatorField
-                fieldProps = {{ type : 'password', ...getFieldProps(
+            <FormField
+                type='password'
+                {...getFieldProps(
                     'passwordInput',
                     'Password',
                     null,
                     `Enter a password of ${passwordMinimumLength} characters minimum`
-                )}}
-                stateRef={password}
-                validators={{
-                    setIsValid : (value) => dispatchFormValidity({ issuer : 'password', value }),
-                    validateContent : validatePassword
-                }}
+                )}
+                value={password.current}
+                validateF={validatePassword}
+                // validators={{
+                //     setIsValid : (value) => dispatchFormValidity({ issuer : 'password', value }),
+                //     validateContent : validatePassword
+                // }}
             />
             {userAction === 'signup' ? 
             <>
-                <ValidatorField
-                    fieldProps = {{ type : 'password', ...getFieldProps(
+                <FormField
+                    type='password'
+                    {...getFieldProps(
                         'repasswordInput',
                         'Repeat password',
                         null,
                         'Type your password again'
-                    )}}
-                    stateRef={repassword}
-                    validators={{
-                        setIsValid : (value) => dispatchFormValidity({issuer : 'repassword', value}),
-                        validateContent : (rpwd) => validateRepassword(rpwd, password)
-                    }}
+                    )}
+                    value={repassword.current}
+                    validateF={validateRepassword}
+                    // validators={{
+                    //     setIsValid : (value) => dispatchFormValidity({issuer : 'repassword', value}),
+                    //     validateContent : (rpwd) => validateRepassword(rpwd, password)
+                    // }}
                 />
-                <ValidatorField
-                    fieldProps = {getFieldProps(
+                <FormField
+                    {...getFieldProps(
                         'countrySelect',
                         'Country',
                         null,
                         'Select the financial system you belong to among the following available countries'
                     )}
-                    stateRef={country}
-                    validators={{
-                        setIsValid : (value) => dispatchFormValidity({issuer : 'country', value})
-                    }}
+                    value={country.current}
+                    // validators={{
+                    //     setIsValid : (value) => dispatchFormValidity({issuer : 'country', value})
+                    // }}
                     select
                     children={
                         countries.map((option) => (

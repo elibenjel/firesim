@@ -37,19 +37,40 @@ const tabs = [
     },
 ];
 
-const CustomDrawer = (props) => {
-    const { selected, tradHook : t } = props;
-
-    // open and close the drawer
-    const [open, setOpen] = useState(true);
+const DrawerHandle = (props) => {
+    const { drawerState, setDrawerState } = props;
 
     const handleDrawerOpen = () => {
-        setOpen(true);
+        setDrawerState(true);
     };
 
     const handleDrawerClose = () => {
-        setOpen(false);
+        setDrawerState(false);
     };
+
+    return (
+        <Paper sx={{
+            zIndex: (theme) => theme.zIndex.drawer + 1,
+            mt: 3, mr: 1,
+            position: 'fixed', right: 0,
+            borderRadius: '50%',
+            backgroundColor: drawerState ? (theme) => theme.palette.background.paper : 'rgb(250 250 250 / 50%)'
+        }}>
+            <IconButton
+                onClick={drawerState ? handleDrawerClose : handleDrawerOpen}
+                color='primary'
+            >
+                {drawerState ? <ExpandLess /> : <ExpandMore />}
+            </IconButton>
+        </Paper>
+    )
+}
+
+const CustomDrawer = (props) => {
+    const { selected, tradHook : t } = props;
+
+    // pass this state to DrawerHandle to open and close the drawer
+    const [open, setOpen] = useState(true);
 
     // manage the selected tab, and sync it with the path location    
     const location = useLocation();
@@ -111,20 +132,7 @@ const CustomDrawer = (props) => {
                     </Tabs>
                 </Box>
             </Drawer>
-            <Paper sx={{
-                    zIndex: (theme) => theme.zIndex.drawer + 1,
-                    mt: 3, mr: 1,
-                    position: 'fixed', right: 0,
-                    borderRadius: '50%',
-                    backgroundColor: open ? (theme) => theme.palette.background.paper : 'rgb(250 250 250 / 50%)'
-            }}>
-            <IconButton
-                onClick={open ? handleDrawerClose : handleDrawerOpen}
-                color='primary'
-            >
-                {open ? <ExpandLess /> : <ExpandMore />}
-            </IconButton>
-            </Paper>
+            <DrawerHandle drawerState={open} setDrawerState={setOpen} />
         </>
     )
 }

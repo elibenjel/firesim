@@ -17,6 +17,19 @@ const ParameterPanel = (props) => {
         rerunOnEnter
     } = props;
 
+    const onKeyUp = (event) => rerunOnEnter(event);
+    const getFieldProps = (id) => {
+        const { nameF, placeholder = '', helperTextF, validateF, startAdornmentF, infoF } = fieldInfo[id];
+        const label = nameF(t), helperText = helperTextF(t), startAdornment = startAdornmentF(t), helpBubble = infoF(t);
+        return {
+            tradHook: t,
+            id, label, placeholder, helperText,
+            startAdornment, helpBubble,
+            validateF, onKeyUp,
+            sx : { width : '95%' }
+        };
+    }
+
     const updateBenefits = (val, newBenef, setState) => {
         annualBenefits.current = newBenef;
         dispatchParameterValidity({
@@ -35,14 +48,6 @@ const ParameterPanel = (props) => {
         setState(val);
     }
 
-    const commonProps = {
-        tradHook: t,
-        validity: parameterValidity, dispatch: dispatchParameterValidity,
-        callbacks: {
-            handleKeyUp: (event) => rerunOnEnter(event)
-        }
-    }
-
     return (
         <Paper variant='side-primary' reversed sx={{ maxWidth : '40%'}} >
             <Typography variant='h4' fontWeight={'bold'}>{t('title1')}</Typography>
@@ -50,22 +55,18 @@ const ParameterPanel = (props) => {
                 display: 'flex',
                 flexDirection: 'column'
             }} >
-                <ParameterField id={'annualIncomeInput'}
-                    state={annualIncome} setState={val => updateBenefits(val, val-annualSpendings, setAnnualIncome)}
-                    {...commonProps}
-                />
-                <ParameterField id='annualSpendingsInput'
-                    state={annualSpendings} setState={val => updateBenefits(val, annualIncome-val, setAnnualSpendings)}
-                    {...commonProps}
-                />
-                <ParameterField readOnly id='annualBenefitsInput' sref={annualBenefits} {...commonProps} />
-                <ParameterField id='igrInput' state={igr} setState={val => updateRoi(val, val - - ir, setIgr)}
-                    {...commonProps}
-                />
-                <ParameterField id='irInput' state={ir} setState={val => updateRoi(val, igr - - val, setIr)}
-                    {...commonProps}
-                />
-                <ParameterField readOnly id='roiInput' sref={roi} {...commonProps} />
+                <ParameterField value={annualIncome} {...getFieldProps('annualIncomeInput')}
+                    setState={val => updateBenefits(val, val-annualSpendings, setAnnualIncome)} />
+                <ParameterField value={annualSpendings} {...getFieldProps('annualSpendingsInput')}
+                    setState={val => updateBenefits(val, annualIncome-val, setAnnualSpendings)} />
+                <ParameterField value={annualBenefits.current} externalValidityControl={parameterValidity.annualBenefitsInput}
+                    {...getFieldProps('annualBenefitsInput')} readOnly />
+                <ParameterField value={igr} {...getFieldProps('igrInput')}
+                    setState={val => updateRoi(val, val - - ir, setIgr)} />
+                <ParameterField value={ir} {...getFieldProps('irInput')}
+                    setState={val => updateRoi(val, igr - - val, setIr)} />
+                <ParameterField value={roi.current} externalValidityControl={parameterValidity.roiInput}
+                    {...getFieldProps('roiInput')} readOnly />
             </Box>
         </Paper>
     );

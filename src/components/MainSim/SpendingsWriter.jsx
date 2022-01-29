@@ -1,0 +1,7 @@
+
+const SpendingsWriterBase = (props) => {
+    
+    return (
+
+    )
+}
