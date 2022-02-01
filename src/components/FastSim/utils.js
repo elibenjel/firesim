@@ -1,3 +1,5 @@
+import * as functions from '../../utils/functions';
+
 
 export const fieldInfo = {
     annualIncomeInput: {
@@ -5,7 +7,7 @@ export const fieldInfo = {
         nameF: null,
         infoF: null,
         validateF: (val) => {
-            return val && !Number.isNaN(Number(val)) && val >= 0;
+            return functions.isNumber(val) && val >= 0;
         },
         placeholder: 'ex: 30000',
         helperTextF: null,
@@ -17,7 +19,7 @@ export const fieldInfo = {
         nameF: null,
         infoF: null,
         validateF: (val) => {
-            return val && !Number.isNaN(Number(val)) && val >= 0;
+            return functions.isNumber(val) && val >= 0;
         },
         placeholder: 'ex: 15000',
         helperTextF: null,
@@ -29,7 +31,7 @@ export const fieldInfo = {
         nameF: null,
         infoF: null,
         validateF: (val) => {
-            return val && !Number.isNaN(Number(val)) && val >= 0;
+            return functions.isNumber(val) && val >= 0;
         },
         helperTextF: null,
         startAdornmentF: null
@@ -40,7 +42,7 @@ export const fieldInfo = {
         nameF: null,
         infoF: null,
         validateF: (val) => {
-            return val && !Number.isNaN(Number(val));
+            return functions.isNumber(val);
         },
         placeholder: 'ex: 8',
         helperTextF: null,
@@ -52,7 +54,7 @@ export const fieldInfo = {
         nameF: null,
         infoF: null,
         validateF: (val) => {
-            return val && !Number.isNaN(Number(val));
+            return functions.isNumber(val);
         },
         placeholder: 'ex: 2',
         helperTextF: null,
@@ -64,7 +66,7 @@ export const fieldInfo = {
         nameF: null,
         infoF: null,
         validateF: (val) => {
-            return val && Number(val);
+            return functions.isNumber(val);
         },
         placeholder: 'ex: 10',
         helperTextF: null,

@@ -4,6 +4,7 @@ import { Route, Routes, useMatch } from 'react-router-dom';
 import { Box, Paper } from '@mui/material';
 
 import CustomDrawer from '../components/MainSim/CustomDrawer.jsx';
+import Spendings from '../components/MainSim/Spendings.jsx';
 import ParameterField from '../components/FastSim/ParameterField.jsx';
 
 const Test = (props) => {
@@ -32,14 +33,12 @@ const MainSim = (props) => {
             width: '100%', height: '100%'
         }}>
             <CustomDrawer tradHook={tradHook} />
-            <Box>
             <Routes>
                 <Route path='' element={<Test />} />
-                <Route path='spendings' element={'spendings'} />
+                <Route path='spendings' element={<Spendings />} />
                 <Route path='market' element={'market'} />
                 <Route path='howto' element={'howto'} />
             </Routes>
-            </Box>
         </Box>
     );
 }

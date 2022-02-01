@@ -36,7 +36,7 @@ export const ParameterField = (props) => {
     });
 
     return (
-        <ValidatorWrapper externalValidityControl={externalValidityControl} {...other} >
+        <ValidatorWrapper externalValidityControl={externalValidityControl} iconMargins={{ mt : 2 }} {...other} >
             {
                 (args) => (
                     <TextField

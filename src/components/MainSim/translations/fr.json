@@ -2,5 +2,21 @@
     "howto": "Aide",
     "spendings": "Profil de dépenses",
     "market": "Evolution du marché",
-    "sim": "Simulateur"
+    "sim": "Simulateur",
+    "periodic-title": "Dépenses périodiques",
+    "occasional-title": "Dépenses occasionnelles",
+    "spendings-label": "Etiquette",
+    "spendings-help": "Le nom donné à la dépense",
+    "amount-label": "Montant",
+    "amount-help": "Le montant de la dépense",
+    "tpy-label": "Fréquence",
+    "tpy-help": "Combien de fois par an la dépense est-elle effectuée ?",
+    "modify": "Modifier",
+    "remove": "Supprimer",
+    "lock": "Confirmer",
+    "undo": "Annuler",
+    "add": "Ajouter",
+    "housing": "Logement",
+    "food": "Alimentation",
+    "total": "Total"
 }
