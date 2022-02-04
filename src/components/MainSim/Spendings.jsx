@@ -14,7 +14,9 @@ import {
     Lock,
     RemoveCircleOutline,
     Undo,
-    Add
+    Add,
+    Visibility,
+    VisibilityOff
 } from '@mui/icons-material';
 
 import ValidatorWrapper from "../InformationDisplay/ValidatorWrapper.jsx";
@@ -38,6 +40,10 @@ const Test = () => {
     return <Box />
 }
 
+const CheckVisible = (props) => {
+    return <Checkbox {...props} icon={<Visibility />} checkedIcon={<VisibilityOff />} />
+}
+
 const ControlGroup = (props) => {
     const { tradHook : t, lock, setLockUtility, lockState, setNewLockState, backToLockState, validContent, removeSelf, isChecked, handleChecked } = props;
 
@@ -57,7 +63,6 @@ const ControlGroup = (props) => {
         backToLockState();
     }
 
-    console.log('control : ', isChecked())
 
     return (
         <Box sx={{
@@ -67,7 +72,7 @@ const ControlGroup = (props) => {
             <>
                 <ControlButton title={t('modify')} onClick={handleModify} icon={<Edit />} />
                 <ControlButton title={t('remove')} onClick={handleRemove} icon={<RemoveCircleOutline />} />
-                <Checkbox checked={isChecked()} onChange={handleChecked} />
+                <CheckVisible checked={isChecked()} onChange={handleChecked} />
             </>
             :
             <>
@@ -126,10 +131,10 @@ const SpendingsLineContent = (props) => {
     
     const validContent = validateName() && amount;
     
-    // useEffect(() => {
-    //     setChildrenIsValid(validContent);
-    //     setHide(lock);
-    // });
+    useEffect(() => {
+        setChildrenIsValid(validContent);
+        setHide(lock);
+    });
 
     // manage events for each field
     const handleAmountChange = (event) => {
@@ -165,7 +170,6 @@ const SpendingsLineContent = (props) => {
         validContent, removeSelf, isChecked, handleChecked
     };
 
-    console.log('line content : ', name, isChecked())
 
     return (
             <Paper elevation={lock ? 0 : 1 } sx={{
@@ -189,7 +193,6 @@ const SpendingsLineContent = (props) => {
 
 const SpendingsLine = (props) => {
     const { externalValidityControl, ...other } = props;
-    // console.log('line : ', other.defaultName, other.isChecked())
     return (
         <ValidatorWrapper externalValidityControl={externalValidityControl} iconMargins={{ mt : 3 }} sx={{ width : '100%' }} >
             {(args) => <SpendingsLineContent {...args} {...other} />}
@@ -246,19 +249,14 @@ const SpendingsBase = (props) => {
         checkedSummary.current = total;
     }
 
-    console.log('Rerender : ', checked);
     const handleChecked = (key) => (event) => {
-        console.log('clicked : ', key, checked)
-        // console.log('new : ', newChecked)
         setChecked((current) => {
-            console.log('current : ', current)
             let newChecked = { ...current, [key] : event.target.checked };
-            if (checkedSummary === null) {
+            if (checkedSummary.current === null) {
                 sumUpChecked(newChecked);
             } else {
                 checkedSummary.current = null;
             }
-            console.log('new : ', newChecked)
             return newChecked
         });
     }
@@ -276,10 +274,10 @@ const SpendingsBase = (props) => {
     }
 
     // used each time a permanent line must be added to lines list
-    const getPermanentLine = (props, key) => () => {
-        console.log('getPerm : ', key, checked[key])
+    // checked state needs to be passed in the returned jsx expression to get its most recently updated state
+    const getPermanentLine = (props, key) => (currentChecked) => {
         return <SpendingsLine tradHook={t} locked 
-            {...props} removeSelf={removeLine(key)} isChecked={() => console.log('isChecked ? ', checked) || checked[key]} handleChecked={handleChecked(key)}
+            {...props} removeSelf={removeLine(key)} isChecked={() => currentChecked[key]} handleChecked={handleChecked(key)}
             {...other} />
     }
 
@@ -337,20 +335,17 @@ const SpendingsBase = (props) => {
             width: '100%'
         }}>
             <Typography variant='h4' fontWeight={'bold'} >{title}</Typography>
-            <Box sx={{display : 'flex', justifyContent : 'flex-end'}} >
-                <Checkbox checked={!!checkedSummary.current}
+            <Box sx={{display : 'flex', justifyContent : 'flex-end', width : '100%'}} >
+                <CheckVisible checked={!!checkedSummary.current}
                     indeterminate={checkedSummary.current === null}
                     onChange={handleAllChecked} />
             </Box>
-            <>
-            <Test />
             {
                 keys.map((k) => {
-                    return lines.current[k]() || <SpendingsLine tradHook={t} key={tempKey} isChecked={() => 'temp'}
+                    return lines.current[k] ? lines.current[k](checked) : <SpendingsLine tradHook={t} key={tempKey} isChecked={() => 'temp'}
                     addLine={addLine} removeSelf={removeLine(tempKey)} {...other} />
                 })
             }
-            </>
             <AddLineButton title={t('add')} add={addTemp} disabled={keys.includes(tempKey)} />
         </Paper>
     )
