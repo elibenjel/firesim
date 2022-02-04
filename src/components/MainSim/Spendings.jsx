@@ -6,14 +6,15 @@ import {
     IconButton,
     TextField,
     Typography,
-    Tooltip
+    Tooltip,
+    Checkbox
 } from '@mui/material';
 import {
     Edit,
     Lock,
     RemoveCircleOutline,
     Undo,
-    AddCircleOutline
+    Add
 } from '@mui/icons-material';
 
 import ValidatorWrapper from "../InformationDisplay/ValidatorWrapper.jsx";
@@ -32,24 +33,31 @@ const ControlButton = (props) => {
     )
 }
 
+const Test = () => {
+    console.log('test !');
+    return <Box />
+}
+
 const ControlGroup = (props) => {
-    const { tradHook : t, lock, setLock, lockState, setNewLockState, backToLockState, validContent, removeSelf } = props;
+    const { tradHook : t, lock, setLockUtility, lockState, setNewLockState, backToLockState, validContent, removeSelf, isChecked, handleChecked } = props;
 
     const handleModify = () => {
-        setLock(false);
+        setLockUtility(false);
     }
 
     const handleLock = () => {
-        setLock(true);
+        setLockUtility(true);
         setNewLockState();
     }
 
     const handleRemove = removeSelf;
     
     const handleUndo = () => {
-        setLock(true);
+        setLockUtility(true);
         backToLockState();
     }
+
+    console.log('control : ', isChecked())
 
     return (
         <Box sx={{
@@ -59,11 +67,14 @@ const ControlGroup = (props) => {
             <>
                 <ControlButton title={t('modify')} onClick={handleModify} icon={<Edit />} />
                 <ControlButton title={t('remove')} onClick={handleRemove} icon={<RemoveCircleOutline />} />
+                <Checkbox checked={isChecked()} onChange={handleChecked} />
             </>
             :
             <>
                 <ControlButton title={t('lock')} onClick={handleLock} icon={<Lock />} disabled={!validContent} />
                 <ControlButton title={t('undo')} onClick={handleUndo} icon={<Undo />} disabled={!lockState} />
+                {backToLockState ?
+                    null : <ControlButton title={t('remove')} onClick={handleRemove} icon={<RemoveCircleOutline />} />}
             </>
             }
         </Box>
@@ -74,12 +85,16 @@ const SpendingsLineContent = (props) => {
     const {
         tradHook : t, externalValidityControl,
         setChildrenIsValid, setHide,
-        removeSelf, defaultName, defaultAmount, defaultTPY, locked,
-        addLine, noPeriodic, ...other
+        defaultName, defaultAmount, defaultTPY, locked,
+        removeSelf, addLine, noPeriodic, isChecked, handleChecked
     } = props;
     const [name, setName] = useState(defaultName || '');
     const [amount, setAmount] = useState(defaultAmount || '');
     const [timesPerYear, setTimesPerYear] = useState(defaultTPY || 1);
+
+    // permanent lines are locked by default, and must have a valid default content
+    // a new line does not have a valid content, and is not locked : when locked, it is removed and
+    // a permanent line that copies its content is created by addLine function
     const [lock, setLock] = useState(locked || false);
     const [lockState, setLockState] = useState(
         (lock && name && amount && timesPerYear) ?
@@ -87,31 +102,36 @@ const SpendingsLineContent = (props) => {
         : null
     );
 
+    // remember the previous valid state that was locked, to come back to it if the user wants
     const setNewLockState = () => {
         setLockState({ name, amount, timesPerYear });
     }
 
-    const backToLockState = () => {
+    const backToLockState = lockState && (() => {
         setName(lockState.name);
         setAmount(lockState.amount);
         setTimesPerYear(lockState.timesPerYear);
-    }
+    });
 
+    // when locking the line, if it is a new line that is locked for the first time, add it to the permanent lines list
     const setLockUtility = (bool) => {
         setLock(bool);
         addLine && addLine({ defaultName : name, defaultAmount : amount, defaultTPY : timesPerYear }, name);
     }
     
+    // manage the valid state of the line content to notify ValidatorWrapper
     const validateName = () => {
         return name.length > 0 && name.length < 100;
     }
     
     const validContent = validateName() && amount;
-    useEffect(() => {
-        setChildrenIsValid(validContent);
-        setHide(lock);
-    });
+    
+    // useEffect(() => {
+    //     setChildrenIsValid(validContent);
+    //     setHide(lock);
+    // });
 
+    // manage events for each field
     const handleAmountChange = (event) => {
         setAmount(event.target.value === '' ? '' : Number(event.target.value));
     };
@@ -132,7 +152,21 @@ const SpendingsLineContent = (props) => {
         }
     };
 
-    const controlGroupProps = { tradHook : t, lock, setLock, lockState, setNewLockState, backToLockState, validContent, removeSelf };
+    const fieldProps = (baseID, value, inputProps = {}, sx = {}) => ({
+        id: `${baseID}-input`, label: t(`${baseID}-label`), helperText: t(`${baseID}-help`),
+        size: 'small', color: 'secondary', value,
+        inputProps: { disabled : lock, ...inputProps },
+        sx: { mr : 2, ...sx }
+    });
+    
+    const controlGroupProps = {
+        tradHook: t,
+        lock, setLockUtility, lockState, setNewLockState, backToLockState,
+        validContent, removeSelf, isChecked, handleChecked
+    };
+
+    console.log('line content : ', name, isChecked())
+
     return (
             <Paper elevation={lock ? 0 : 1 } sx={{
                 display: 'flex',
@@ -141,17 +175,13 @@ const SpendingsLineContent = (props) => {
                 p: 1, m: 1,
                 backgroundColor: (theme) => lock ? 'rgba(0,0,0,0)' : theme.palette.background.paper,
             }}>
-                <TextField id='nameInput' size='small' color='secondary' value={name} label={t('spendings-label')}
-                    onChange={(event) => setName(event.target.value)} helperText={t('spendings-help')}
-                    sx={{ mr : 2 }} readOnly={lock} />
-                <TextField id='amountInput' size='small' color='secondary' value={amount} label={t('amount-label')}
-                    onChange={handleAmountChange} onBlur={handleAmountBlur} helperText={t('amount-help')}
-                    inputProps={{ min : 1, type : 'number'}}
-                    sx={{ mr : 2 }} readOnly={lock} />
-                <TextField id='tpyInput' size='small' color='secondary' value={timesPerYear} label={t('tpy-label')}
-                    onChange={handleTPYChange} onBlur={handleTPYBlur} helperText={t('tpy-help')}
-                    inputProps={{ step : 1, min : 1, type : 'number' }}
-                    sx={{ mr : 2, display : noPeriodic ? 'none' : null }} readOnly={lock} />
+                <TextField {...fieldProps('name', name)} onChange={(event) => setName(event.target.value)} />
+                <TextField {...fieldProps('amount', amount, { step : 50, min : 1, type : 'number' })}
+                    onChange={handleAmountChange} onBlur={handleAmountBlur} />
+                <TextField {...fieldProps('tpy', timesPerYear,
+                    { step : 1, min : 1, type : 'number' },
+                    { display : noPeriodic ? 'none' : null })}
+                    onChange={handleTPYChange} onBlur={handleTPYBlur} />
                 <ControlGroup {...controlGroupProps} />
             </Paper>
     )
@@ -159,53 +189,138 @@ const SpendingsLineContent = (props) => {
 
 const SpendingsLine = (props) => {
     const { externalValidityControl, ...other } = props;
+    // console.log('line : ', other.defaultName, other.isChecked())
     return (
         <ValidatorWrapper externalValidityControl={externalValidityControl} iconMargins={{ mt : 3 }} sx={{ width : '100%' }} >
-            {(args) => <SpendingsLineContent {...args} setName {...other} />}
+            {(args) => <SpendingsLineContent {...args} {...other} />}
         </ValidatorWrapper>
     )
 }
 
 const AddLineButton = (props) => {
-    const { title, add } = props;
+    const { title, add, ...other } = props;
 
     const handleClick = (event) => {
         add();
     }
 
     return (
-        <ControlButton title={title} onClick={handleClick} icon={<AddCircleOutline />} />
+        <Paper elevation={1} sx={{
+            borderRadius: '50%',
+            backgroundImage: (theme) => `
+                linear-gradient(45deg, ${theme.palette.background.paper} 2%,
+                ${theme.palette.secondary.light} 100%)
+            `
+        }}>
+            <ControlButton title={title} size='large' onClick={handleClick}
+                icon={<Add sx={{ fill: (theme) => theme.palette.secondary.dark }} />} {...other} />
+        </Paper>
     )
 }
 
 const SpendingsBase = (props) => {
-    const { tradHook : t, title, initial, ...other } = props;
-    const [keys, setKeys] = useState(initial.map(item => item.key));
+    const { tradHook : t, title, initial = [], ...other } = props;
+    const tempKey = ':temp:';
+    const [keys, setKeys] = useState(() => initial.map(item => item.key));
     const removedKey = useRef(null);
-        
+    
+    // track check state of each line to sync global checkbox state
+    const checkedSummary = useRef(false);
+    const [checked, setChecked] = useState(() => initial.reduce((prev, curr) => {
+        return { ...prev, [curr.key] : false };
+    }, {}));
+
+    const sumUpChecked = (newChecked) => {
+        let total = true;
+        let start = true;
+        for (const curr in newChecked) {
+            const bool = newChecked[curr];
+            if (!start && (bool !== total)) {
+                total = null;
+                break;
+            }
+            total = bool && total;
+            start = false;
+        }
+
+        checkedSummary.current = total;
+    }
+
+    console.log('Rerender : ', checked);
+    const handleChecked = (key) => (event) => {
+        console.log('clicked : ', key, checked)
+        // console.log('new : ', newChecked)
+        setChecked((current) => {
+            console.log('current : ', current)
+            let newChecked = { ...current, [key] : event.target.checked };
+            if (checkedSummary === null) {
+                sumUpChecked(newChecked);
+            } else {
+                checkedSummary.current = null;
+            }
+            console.log('new : ', newChecked)
+            return newChecked
+        });
+    }
+
+    const handleAllChecked = (event) => {
+        let allChecked = {};
+        const getNewBool = (bool) => checkedSummary.current === null ? false : !bool;
+        let bool;
+        for (const key in checked) {
+            bool = getNewBool(checked[key]);
+            allChecked[key] = bool;
+        }
+        setChecked(allChecked);
+        checkedSummary.current = bool;
+    }
+
+    // used each time a permanent line must be added to lines list
+    const getPermanentLine = (props, key) => () => {
+        console.log('getPerm : ', key, checked[key])
+        return <SpendingsLine tradHook={t} locked 
+            {...props} removeSelf={removeLine(key)} isChecked={() => console.log('isChecked ? ', checked) || checked[key]} handleChecked={handleChecked(key)}
+            {...other} />
+    }
+
+    // callback passed down to each line so that it can notify this component that it must be removed
     const removeLine = (key) => () => {
         setKeys((curr) => curr.filter(el => el !== key));
         removedKey.current = key;
+        setChecked((curr) => {
+            let newState = { ...curr };
+            delete newState[key];
+            (checkedSummary.current === null) && sumUpChecked(newState);
+            return newState;
+        });
     }
 
+    // callback only passed to the temporary line that allows to create a new permanent line and add it to the list of lines
+    // it also removes the temporary line
     const addLine = (line, key) => {
-        setKeys((curr) => [...curr.filter(el => el !== ':temp:'), key]);
-        lines.current[key] = (
-            <SpendingsLine tradHook={t} locked
-                {...line} removeSelf={removeLine(key)} {...other} />
-        );
+        const count = keys.filter(el => el.split(':')[0] === key).length;
+        line.key = count ? `${key}:${count}` : key;
+        setKeys((curr) => [...curr.filter(el => el !== tempKey), line.key]);
+        lines.current[line.key] = getPermanentLine(line, line.key);
+        setChecked((curr) => ({ ...curr, [line.key] : false }));
+        if (checkedSummary.current) {
+            checkedSummary.current = null;
+        }
     };
 
+    // callback used by AddLineButton to create a temporary line (max. 1)
     const addTemp = () => {
-        setKeys((curr) => [...curr, ':temp:']);
+        setKeys((curr) => [...curr, tempKey]);
     }
-        
+    
+    // the list of lines to display
+    // does not contain React elements directly, but functions that return them
+    // otherwise, the children lines do not rerender when this parent component (SpendingsBase) is rerendered
     const lines = useRef(initial.reduce((prev, curr) => {
         const { key } = curr;
         return {
-            [key] : <SpendingsLine tradHook={t} locked
-                        {...curr} removeSelf={removeLine(key)} {...other} />,
-            ...prev
+            ...prev,
+            [key] : getPermanentLine(curr, key)
         };
     }, {}));
 
@@ -222,12 +337,21 @@ const SpendingsBase = (props) => {
             width: '100%'
         }}>
             <Typography variant='h4' fontWeight={'bold'} >{title}</Typography>
+            <Box sx={{display : 'flex', justifyContent : 'flex-end'}} >
+                <Checkbox checked={!!checkedSummary.current}
+                    indeterminate={checkedSummary.current === null}
+                    onChange={handleAllChecked} />
+            </Box>
+            <>
+            <Test />
             {
                 keys.map((k) => {
-                    return lines.current[k] || <SpendingsLine tradHook={t} key=':temp:' addLine={addLine} />
+                    return lines.current[k]() || <SpendingsLine tradHook={t} key={tempKey} isChecked={() => 'temp'}
+                    addLine={addLine} removeSelf={removeLine(tempKey)} {...other} />
                 })
             }
-            <AddLineButton title={t('add')} add={addTemp} />
+            </>
+            <AddLineButton title={t('add')} add={addTemp} disabled={keys.includes(tempKey)} />
         </Paper>
     )
 }
@@ -262,8 +386,10 @@ const Spendings = (props) => {
     const { t } = useTranslation('MainSim');
     
     [periodic, occasional].forEach((list) => list.forEach((item) => {
-        item.defaultName = item.nameF(t);
-        delete item.nameF;
+        if (item.nameF) {
+            item.defaultName = item.nameF(t);
+            delete item.nameF;
+        }
     }));
 
     return (
@@ -274,7 +400,7 @@ const Spendings = (props) => {
             width: '100%'
         }}>
             <SpendingsBase tradHook={t} title={t('periodic-title')} initial={periodic} />
-            <SpendingsBase tradHook={t} title={t('occasional-title')} noPeriodic initial={occasional} />
+            {/* <SpendingsBase tradHook={t} title={t('occasional-title')} noPeriodic initial={occasional} /> */}
         </Box>
     )
 }

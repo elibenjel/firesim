@@ -96,7 +96,6 @@ Object.entries(fieldInfo).map(([fieldName, info]) =>{
             const getKey = (key in getTradKeys ? getTradKeys[key] : getDefaultKey(key));
             const tradKey = getKey(index);
             info[key] = ((t) => t(tradKey));
-
         }
     });
 })
