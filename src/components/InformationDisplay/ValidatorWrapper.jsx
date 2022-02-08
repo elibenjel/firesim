@@ -17,24 +17,29 @@ const ValidityIndicator = (props) => {
 }
 
 const ValidatorWrapper = (props) => {
-    const { children, externalValidityControl, iconMargins, sx } = props;
-    const [hide, setHide] = useState(true);
+    const { children, externalValidityControl, iconMargins, exposeIndicator, sx } = props;
+    const [hide, setHide] = useState(false);
     const [childrenIsValid, setChildrenIsValid] = useState(true);
 
+    const getIndicator = () => <ValidityIndicator childrenIsValid={externalValidityControl != null ? externalValidityControl : childrenIsValid}
+    hide={hide} margins={iconMargins} />;
+    const getChildrenIsValid = () => externalValidityControl || childrenIsValid;
     return (
-        <Box container
+        exposeIndicator ?
+        children({ getChildrenIsValid, setChildrenIsValid, setHide, getIndicator })
+        :
+        (<Box container
             sx={{
                 display: 'flex', flexDirection: 'row',
                 justifyContent: 'center', alignItems: 'flex-start',
                 p: 1, m: 1,
-                width: '85%',
+                // width: '85%',
                 ...sx
             }}
         >
-            <ValidityIndicator childrenIsValid={externalValidityControl != null ? externalValidityControl : childrenIsValid}
-                hide={hide} margins={iconMargins} />
-            {children({ setChildrenIsValid, setHide })}
-        </Box>
+            {getIndicator()}
+            {children({ getChildrenIsValid, setChildrenIsValid, setHide })}
+        </Box>)
     )
 }
 

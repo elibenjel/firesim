@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useTranslation } from "react-i18next";
+import { useTheme } from '@mui/material/styles';
 import {
     Box,
     Paper,
@@ -7,7 +8,10 @@ import {
     TextField,
     Typography,
     Tooltip,
-    Checkbox
+    Checkbox,
+    InputAdornment,
+    Divider,
+    Grid
 } from '@mui/material';
 import {
     Edit,
@@ -16,127 +20,270 @@ import {
     Undo,
     Add,
     Visibility,
-    VisibilityOff
+    VisibilityOff,
+    Check,
+    VisibilityOutlined
 } from '@mui/icons-material';
 
 import ValidatorWrapper from "../InformationDisplay/ValidatorWrapper.jsx";
 import * as functions from '../../utils/functions';
 
+
+const tempKey = '|temp|';
+const totalColumns = 12;
+const lineColumns = 8;
+const controlColumns = 3;
+const remainingColumns = totalColumns - lineColumns - controlColumns;
+const centeredInCell = { display : 'flex', alignItems : 'center', justifyContent : 'center' };
+const hcenterInCell = { display : 'flex', alignItems : 'center' };
+const vcenterInCell = { display : 'flex', justifyContent : 'center' };
+
 const ControlButton = (props) => {
-    const { title, onClick, icon, ...other } = props;
+    const { title='', onClick, icon, hidden, ...other } = props;
     return (
-        <Tooltip title={title} >
-            <span>
-                <IconButton id={`${title}-button`} onClick={onClick} {...other} >
-                    {icon}
-                </IconButton>
-            </span>
-        </Tooltip>
-    )
-}
-
-const Test = () => {
-    console.log('test !');
-    return <Box />
-}
-
-const CheckVisible = (props) => {
-    return <Checkbox {...props} icon={<Visibility />} checkedIcon={<VisibilityOff />} />
-}
-
-const ControlGroup = (props) => {
-    const { tradHook : t, lock, setLockUtility, lockState, setNewLockState, backToLockState, validContent, removeSelf, isChecked, handleChecked } = props;
-
-    const handleModify = () => {
-        setLockUtility(false);
-    }
-
-    const handleLock = () => {
-        setLockUtility(true);
-        setNewLockState();
-    }
-
-    const handleRemove = removeSelf;
-    
-    const handleUndo = () => {
-        setLockUtility(true);
-        backToLockState();
-    }
-
-
-    return (
-        <Box sx={{
-            display: 'flex',
-        }}>
-            {lock ?
-            <>
-                <ControlButton title={t('modify')} onClick={handleModify} icon={<Edit />} />
-                <ControlButton title={t('remove')} onClick={handleRemove} icon={<RemoveCircleOutline />} />
-                <CheckVisible checked={isChecked()} onChange={handleChecked} />
-            </>
-            :
-            <>
-                <ControlButton title={t('lock')} onClick={handleLock} icon={<Lock />} disabled={!validContent} />
-                <ControlButton title={t('undo')} onClick={handleUndo} icon={<Undo />} disabled={!lockState} />
-                {backToLockState ?
-                    null : <ControlButton title={t('remove')} onClick={handleRemove} icon={<RemoveCircleOutline />} />}
-            </>
-            }
+        <Box sx={{ visibility : hidden ? 'hidden' : 'visible' }}>
+            <Tooltip title={title} >
+                <span>
+                    <IconButton id={`${title}-button`} onClick={onClick} {...other} >
+                        {icon}
+                    </IconButton>
+                </span>
+            </Tooltip>
         </Box>
     )
 }
 
-const SpendingsLineContent = (props) => {
+const CheckVisible = (props) => {
+    const { title, checkedTitle, checked, indeterminate, ...other } = props;
+    const theme = useTheme();
+    
+    const controlButtonProps = {};
+    if (indeterminate) {
+        controlButtonProps.title = checkedTitle;
+        controlButtonProps.icon = <Visibility sx={{color : theme.palette.primary.main}} />;
+    } else if (checked) {
+        controlButtonProps.title = checkedTitle;
+        controlButtonProps.icon = <VisibilityOff sx={{color : theme.palette.secondary.dark}} />;
+    } else {
+        controlButtonProps.title = title;
+        controlButtonProps.icon = <VisibilityOutlined sx={{color : theme.palette.secondary.dark}} />;
+    }
+
+    return (
+        <ControlButton {...controlButtonProps} {...other} />
+    )
+}
+
+const ControlButtonFiller = (props) => {
+    return (
+        <ControlButton disabled icon={<Visibility />} hidden />
+    )
+}
+
+const TopControlGroup = (props) => {
+    const { tradHook : t, deactivateAll, handleDeactivateAll, disableAll } = props;
+
+    return (
+        <Grid container columns={controlColumns} {...centeredInCell} textAlign='center' >
+            <Grid item xs component={ControlButtonFiller} />
+            <Grid item xs component={ControlButtonFiller} />
+            <Grid item xs component={CheckVisible}
+                title={t('deactivateAll')} checkedTitle={t('activateAll')}
+                checked={!!deactivateAll} indeterminate={deactivateAll === null}
+                onClick={handleDeactivateAll} disabled={disableAll} />
+        </Grid>
+    )
+}
+
+const ControlGroup = (props) => {
+    const { tradHook : t,
+        lineIsLocked, setLineIsLocked, lineIsDeactivated, setLineIsDeactivated,
+        lineIsTemp, lineIsValid, setUndo, removeLine } = props;
+    // const { tradHook : t, lock, setLockUtility, lockState, setNewLockState, backToLockState, validContent, removeSelf } = props;
+
+    const handleModify = () => {
+        setLineIsLocked(false);
+    }
+
+    const handleLock = () => {
+        setLineIsLocked(true);
+        // setNewLockState();
+    }
+
+    const handleRemove = removeLine;
+    
+    const handleUndo = () => {
+        setLineIsLocked(true);
+        setUndo(true);
+    }
+
+    const handleDeactivate = setLineIsDeactivated;
+
+    return (
+        // <Paper elevation={1} >Control</Paper>
+        <Grid container columns={controlColumns} {...centeredInCell} textAlign='center' >
+            {lineIsLocked ?
+            <>
+                <Grid item xs component={ControlButton} title={t('modify')}
+                    onClick={handleModify} icon={<Edit />} />
+                <Grid item xs component={ControlButton} title={t('remove')}
+                    onClick={handleRemove} icon={<RemoveCircleOutline />} />
+                <Grid item xs component={CheckVisible}
+                    title={t('deactivate')} checkedTitle={t('activate')}
+                    checked={lineIsDeactivated} onClick={handleDeactivate} />
+            </>
+            :
+            <>
+                <Grid item xs component={ControlButton} title={t('lock')}
+                    onClick={handleLock} icon={<Lock />} disabled={!lineIsValid} />
+                {lineIsTemp ?
+                <Grid item xs component={ControlButton} title={t('remove')}
+                    onClick={handleRemove} icon={<RemoveCircleOutline />} />
+                : <Grid item xs component={ControlButton} title={t('undo')}
+                    onClick={handleUndo} icon={<Undo />} />}
+                <Grid item xs component={ControlButtonFiller} />
+            </>}
+        </Grid>
+    )
+}
+
+const LabelsLine = (props) => {
+    const { fields } = props;
+    const itemProps = (label, index) => ({
+        variant: 'h8', fontWeight: 'bold', pl: 1,
+        borderLeft: index ? 'solid thin' : 'none',
+        key: label, children: label
+    })
+    return (
+        <Grid container component={Paper} p={1} borderRadius={0} border='solid thin' elevation={4} sx={{
+            backgroundColor: (theme) => theme.palette.secondary.light,
+        }}>
+            {
+                fields.map((label, index) => (
+                    <Grid item xs component={Typography} {...itemProps(label, index)} />
+                ))
+            }
+        </Grid>
+    )
+}
+
+const ResultLine = (props) => {
+    const { tradHook : t, spendings } = props;
+    // const total = 1000;
+
+    const formatLabel = (content) => `${content}:`;
+    const formatValue = (value) => `${Math.floor(value)} ${t('currency')}`;
+    const cells = [
+        { content : t('monthlySpendings'), xs : 'auto', isLabel : true, key : 1 },
+        { content : Number(spendings / 12), xs : 'auto', isLabel : false, key : 2 },
+        { content : t('annualSpendings'), xs : 'auto', isLabel : true, key : 3 },
+        { content : Number(spendings), xs : 'auto', isLabel : false, key : 4 }
+    ];
+
+    const typoProps = (isLabel) => ({
+        variant: isLabel ? 'h8' : 'body1',
+        fontWeight: 'bold',
+        sx: { color : (theme) => theme.palette.primary.dark }
+    })
+
+    return (
+        <Grid container columnSpacing={2} p={1} >
+                <Grid item xs />
+            {
+                cells.map((item) => (
+                    <Grid item {...centeredInCell} xs={item.xs} key={item.key}
+                        component={Typography} {...typoProps(item.isLabel)}
+                        children={item.isLabel ? formatLabel(item.content) : formatValue(item.content)} />
+                ))
+            }
+        </Grid>
+    )
+}
+
+const SpendingsLine = (props) => {
     const {
-        tradHook : t, externalValidityControl,
+        tradHook : t, myIndex,
         setChildrenIsValid, setHide,
-        defaultName, defaultAmount, defaultTPY, locked,
-        removeSelf, addLine, noPeriodic, isChecked, handleChecked
+        defaultName, defaultAmount, defaultTPY,
+        myKey, locked, deactivated, outdated, notifyChange, takenNames,
+        addLine, setMyTotal, noPeriodic,
     } = props;
+
     const [name, setName] = useState(defaultName || '');
     const [amount, setAmount] = useState(defaultAmount || '');
     const [timesPerYear, setTimesPerYear] = useState(defaultTPY || 1);
+    const [lockState, setLockState] = useState(() => (
+        locked ? {
+        name: defaultName,
+        amount: defaultAmount,
+        timesPerYear: defaultTPY
+    } : null));
 
-    // permanent lines are locked by default, and must have a valid default content
-    // a new line does not have a valid content, and is not locked : when locked, it is removed and
-    // a permanent line that copies its content is created by addLine function
-    const [lock, setLock] = useState(locked || false);
-    const [lockState, setLockState] = useState(
-        (lock && name && amount && timesPerYear) ?
-        { name, amount, timesPerYear }
-        : null
-    );
+    const firstMount = useRef(true);
+    const total = useRef(null);
 
-    // remember the previous valid state that was locked, to come back to it if the user wants
-    const setNewLockState = () => {
-        setLockState({ name, amount, timesPerYear });
-    }
+    // keep the total up to date and relay its value to parent, or 0 if the line is deactivated
+    total.current = Number(amount*timesPerYear);
 
-    const backToLockState = lockState && (() => {
-        setName(lockState.name);
-        setAmount(lockState.amount);
-        setTimesPerYear(lockState.timesPerYear);
-    });
+    useEffect(() => {
+        if (myKey !== tempKey) {
+            setMyTotal(deactivated ? 0 : total.current);
+        }
+    }, [total.current, deactivated]);
 
-    // when locking the line, if it is a new line that is locked for the first time, add it to the permanent lines list
-    const setLockUtility = (bool) => {
-        setLock(bool);
-        addLine && addLine({ defaultName : name, defaultAmount : amount, defaultTPY : timesPerYear }, name);
-    }
-    
     // manage the valid state of the line content to notify ValidatorWrapper
     const validateName = () => {
-        return name.length > 0 && name.length < 100;
+        return name.length > 0 && name.length < 100 && (myKey !== tempKey || !takenNames.includes(name));
     }
     
-    const validContent = validateName() && amount;
+    const amIValid = validateName() && functions.isNumber(amount) && amount >= 0;
     
     useEffect(() => {
-        setChildrenIsValid(validContent);
-        setHide(lock);
+        setChildrenIsValid(amIValid);
+        setHide(locked);
     });
 
+    // react to state received from parents if locked has changed from false to true :
+    // if the key is the tempKey, remember new lockState, add a new line that copies this one, and remove this one
+    // else, either come back to previous valid state, or set the new lockState
+    useEffect(() => {
+        if (firstMount.current || !locked) {
+            firstMount.current = false;
+            return;
+        }
+
+        if (myKey === tempKey) {
+            setLockState({ name, amount, timesPerYear });
+            addLine({ myKey : name, defaultName : name, defaultAmount : amount, defaultTPY : timesPerYear });
+        } else if (outdated || !amIValid) {
+            setName(lockState.name);
+            setAmount(lockState.amount);
+            setTimesPerYear(lockState.timesPerYear);
+            notifyChange({ outdated : false });
+        } else {
+            setLockState({ name, amount, timesPerYear });
+        }
+    }, [locked]);
+
     // manage events for each field
+    const handleNameChange = (event) => {
+        const forbidden = [/:/, /\|/];
+        const content = event.target.value;
+        setName((prev) => {
+            let allow = true;
+            forbidden.forEach(substr => {
+                if(content.match(substr)) {
+                    allow = false;
+                }
+            })
+            return allow ? content : prev;
+        });
+    }
+
+    const handleNameBlur = (event) => {
+        let content = event.target.value;
+    }
+
     const handleAmountChange = (event) => {
         setAmount(event.target.value === '' ? '' : Number(event.target.value));
     };
@@ -157,46 +304,51 @@ const SpendingsLineContent = (props) => {
         }
     };
 
-    const fieldProps = (baseID, value, inputProps = {}, sx = {}) => ({
-        id: `${baseID}-input`, label: t(`${baseID}-label`), helperText: t(`${baseID}-help`),
-        size: 'small', color: 'secondary', value,
-        inputProps: { disabled : lock, ...inputProps },
-        sx: { mr : 2, ...sx }
-    });
-    
-    const controlGroupProps = {
-        tradHook: t,
-        lock, setLockUtility, lockState, setNewLockState, backToLockState,
-        validContent, removeSelf, isChecked, handleChecked
-    };
-
+    const fieldProps = (baseID, value, InputProps = {}, sx = {}) => (locked ?
+        {
+            id: `${baseID}-input`, variant: 'standard',
+            size: 'small', value,
+            sx: { ml : 1, mr : 1, ...sx },
+            InputProps: { readOnly : true, sx: {'::after': {
+                borderColor: (theme) => theme.palette.success.main
+            }}, ...InputProps },
+        }
+        :
+        {
+            id: `${baseID}-input`, variant: 'standard', label: t(`${baseID}-label`),
+            size: 'small', value,
+            sx: { ml : 1, mr : 1, ...sx },
+            InputProps: { sx: { '::after': {
+                borderColor: (theme) => theme.palette.secondary.dark
+            }}, ...InputProps },
+            InputLabelProps: { sx: { '&.Mui-focused': {
+                color: (theme) => theme.palette.secondary.dark
+            }}}
+        }
+    );
 
     return (
-            <Paper elevation={lock ? 0 : 1 } sx={{
-                display: 'flex',
-                justifyContent: 'flex-start', alignItems: 'center',
-                width: '100%',
-                p: 1, m: 1,
-                backgroundColor: (theme) => lock ? 'rgba(0,0,0,0)' : theme.palette.background.paper,
+            <Grid container component={Paper} p={1} elevation={locked ? 0 : 1 } sx={{
+                backgroundColor: (theme) => locked ? (myIndex % 2 ? 'rgb(230,230,230)' : 'rgba(0,0,0,0)') : theme.palette.background.paper,
+                opacity: (locked && deactivated) ? '20%' : '100%'
             }}>
-                <TextField {...fieldProps('name', name)} onChange={(event) => setName(event.target.value)} />
-                <TextField {...fieldProps('amount', amount, { step : 50, min : 1, type : 'number' })}
+                <Grid item xs component={TextField} {...fieldProps('name', name,
+                    { endAdornment: <InputAdornment position='end'>:</InputAdornment> })}
+                    onChange={handleNameChange} onBlur={handleNameBlur} />
+                <Grid item xs component={TextField} {...fieldProps('amount', amount,
+                    { startAdornment: <InputAdornment position='start'>{t('currency')}</InputAdornment> })}
+                    inputProps={{ step : 50, min : 0, type : 'number' }}
                     onChange={handleAmountChange} onBlur={handleAmountBlur} />
-                <TextField {...fieldProps('tpy', timesPerYear,
-                    { step : 1, min : 1, type : 'number' },
+                <Grid item xs component={TextField} {...fieldProps('tpy', timesPerYear,
+                    { startAdornment: <InputAdornment position='start'>x</InputAdornment> },
                     { display : noPeriodic ? 'none' : null })}
+                    inputProps={{ step : 1, min : 1, type : 'number' }}
                     onChange={handleTPYChange} onBlur={handleTPYBlur} />
-                <ControlGroup {...controlGroupProps} />
-            </Paper>
-    )
-}
-
-const SpendingsLine = (props) => {
-    const { externalValidityControl, ...other } = props;
-    return (
-        <ValidatorWrapper externalValidityControl={externalValidityControl} iconMargins={{ mt : 3 }} sx={{ width : '100%' }} >
-            {(args) => <SpendingsLineContent {...args} {...other} />}
-        </ValidatorWrapper>
+                <Grid item xs component={TextField} {...fieldProps('total', total.current, {
+                        startAdornment: <InputAdornment position='start'>=</InputAdornment>,
+                        disableUnderline: true
+                    }, { display : noPeriodic ? 'none' : null })} disabled />
+            </Grid>
     )
 }
 
@@ -207,37 +359,52 @@ const AddLineButton = (props) => {
         add();
     }
 
+    const sx = {
+        fill: (theme) => theme.palette.secondary.dark,
+        border: 'solid',
+        borderRadius:'50%',
+        borderColor: (theme) => theme.palette.secondary.dark
+    }
+
+    const sxDisabled = {};
+
     return (
-        <Paper elevation={1} sx={{
-            borderRadius: '50%',
-            backgroundImage: (theme) => `
-                linear-gradient(45deg, ${theme.palette.background.paper} 2%,
-                ${theme.palette.secondary.light} 100%)
-            `
-        }}>
-            <ControlButton title={title} size='large' onClick={handleClick}
-                icon={<Add sx={{ fill: (theme) => theme.palette.secondary.dark }} />} {...other} />
-        </Paper>
+        <ControlButton title={title} size='large' onClick={handleClick}
+            icon={<Add sx={other.disabled ? sxDisabled : sx} />} {...other} />
     )
 }
 
 const SpendingsBase = (props) => {
     const { tradHook : t, title, initial = [], ...other } = props;
-    const tempKey = ':temp:';
-    const [keys, setKeys] = useState(() => initial.map(item => item.key));
-    const removedKey = useRef(null);
     
-    // track check state of each line to sync global checkbox state
-    const checkedSummary = useRef(false);
-    const [checked, setChecked] = useState(() => initial.reduce((prev, curr) => {
-        return { ...prev, [curr.key] : false };
-    }, {}));
+    // locked and deactivated are the line states that cause visual modifications
+    const [linesStates, setLinesStates] = useState(() => initial.map(item => (
+        {
+            locked: true,
+            deactivated: false,
+            total: 0,
+        }
+    )));
 
-    const sumUpChecked = (newChecked) => {
+    // the remaining line state variables do not cause visual modifications
+    const linesRefs = useRef(initial.map(item => (
+        {
+            ...item, // key, defaultName, defaultAmount, defaultTPY
+            outdated: false,
+        }
+    )));
+    
+    const deactivateAll = useRef(false);
+    if (!linesStates.length) {
+        deactivateAll.current = false;
+    }
+
+    // help to determine if global chechbox state is indeterminate, true or false
+    const sumUpDeactivated = (newState) => {
         let total = true;
         let start = true;
-        for (const curr in newChecked) {
-            const bool = newChecked[curr];
+        for (const curr of newState) {
+            const bool = curr.deactivated;
             if (!start && (bool !== total)) {
                 total = null;
                 break;
@@ -246,121 +413,185 @@ const SpendingsBase = (props) => {
             start = false;
         }
 
-        checkedSummary.current = total;
+        deactivateAll.current = total;
     }
 
-    const handleChecked = (key) => (event) => {
-        setChecked((current) => {
-            let newChecked = { ...current, [key] : event.target.checked };
-            if (checkedSummary.current === null) {
-                sumUpChecked(newChecked);
+    const setDeactivated = (index) => (event) => {
+        setLinesStates((current) => {
+            const newState = current.map((item, i) => (
+                i !== index ?
+                item
+                :
+                { ...item, deactivated : !item.deactivated }
+            ));
+
+            if (deactivateAll.current === null) {
+                sumUpDeactivated(newState);
             } else {
-                checkedSummary.current = null;
+                deactivateAll.current = null;
             }
-            return newChecked
+            return newState
         });
     }
 
-    const handleAllChecked = (event) => {
-        let allChecked = {};
-        const getNewBool = (bool) => checkedSummary.current === null ? false : !bool;
-        let bool;
-        for (const key in checked) {
-            bool = getNewBool(checked[key]);
-            allChecked[key] = bool;
-        }
-        setChecked(allChecked);
-        checkedSummary.current = bool;
+    const handleDeactivateAll = (event) => {
+        deactivateAll.current = deactivateAll.current === null ? false : !deactivateAll.current;
+        setLinesStates((current) => current.map(item => (
+            { ...item, deactivated : deactivateAll.current }
+        )));
+    }
+    
+    // Control button handlers
+    const setLocked = (index) => (lock) => {
+        setLinesStates((current) => current.map(
+            (item, i) => i !== index ? item : { ...item, locked : lock }
+        ));
     }
 
-    // used each time a permanent line must be added to lines list
-    // checked state needs to be passed in the returned jsx expression to get its most recently updated state
-    const getPermanentLine = (props, key) => (currentChecked) => {
-        return <SpendingsLine tradHook={t} locked 
-            {...props} removeSelf={removeLine(key)} isChecked={() => currentChecked[key]} handleChecked={handleChecked(key)}
-            {...other} />
+    const setUndo = (index) => (lock) => {
+        setLinesStates((current) => current.map(
+            (item, i) => i !== index ? item : { ...item, locked : lock, outdated : true }
+        ));
+        linesRefs.current[index].outdated = true;
     }
 
-    // callback passed down to each line so that it can notify this component that it must be removed
-    const removeLine = (key) => () => {
-        setKeys((curr) => curr.filter(el => el !== key));
-        removedKey.current = key;
-        setChecked((curr) => {
-            let newState = { ...curr };
-            delete newState[key];
-            (checkedSummary.current === null) && sumUpChecked(newState);
+    const removeLine = (index) => () => {
+        setLinesStates((current) => {
+            const newState = current.filter((_, i) => i !== index);
+            (deactivateAll.current === null) && sumUpDeactivated(newState);
             return newState;
         });
+        
+        linesRefs.current = linesRefs.current.filter((_, i) => i !== index);
     }
 
-    // callback only passed to the temporary line that allows to create a new permanent line and add it to the list of lines
-    // it also removes the temporary line
-    const addLine = (line, key) => {
-        const count = keys.filter(el => el.split(':')[0] === key).length;
-        line.key = count ? `${key}:${count}` : key;
-        setKeys((curr) => [...curr.filter(el => el !== tempKey), line.key]);
-        lines.current[line.key] = getPermanentLine(line, line.key);
-        setChecked((curr) => ({ ...curr, [line.key] : false }));
-        if (checkedSummary.current) {
-            checkedSummary.current = null;
+    // can be called by AddLineButton to add a temporary line, or by a temporary line that is locked with a valid state
+    // to add a permanent line
+    const addLine = (line) => {
+        if (line) {
+            linesRefs.current.pop();
+            linesRefs.current = [...linesRefs.current, { ...line, outdated : false }]
+            setLinesStates((current) => [ ...current.slice(0, -1), {
+                locked: true,
+                deactivated: false,
+                total: 0
+            }]);
+        } else {
+            linesRefs.current = [...linesRefs.current, { myKey : tempKey, outdated : false }]
+            setLinesStates((current) => [ ...current, {
+                locked: false,
+                deactivated: false,
+                total: 0
+            }]);
+        }
+
+        if (deactivateAll.current) {
+            deactivateAll.current = null;
+        }
+    }
+
+    const setTotal = (index) => (value) => {
+        setLinesStates((current) => current.map(
+            (item, i) => i !== index ? item : { ...item, total : value }
+        ));
+    }
+
+    const controlGroupProps = (index) => {
+        const myProps = { ...linesStates[index], ...linesRefs.current[index] };
+        return {
+            tradHook: t,
+            lineIsLocked: myProps.locked, lineIsDeactivated: myProps.deactivated, lineIsTemp: myProps.myKey === tempKey,
+            setLineIsLocked: setLocked(index), setLineIsDeactivated: setDeactivated(index), setUndo: setUndo(index),
+            removeLine: removeLine(index)
         }
     };
 
-    // callback used by AddLineButton to create a temporary line (max. 1)
-    const addTemp = () => {
-        setKeys((curr) => [...curr, tempKey]);
+    const topControlGroupProps = {
+        tradHook: t,
+        deactivateAll: deactivateAll.current, handleDeactivateAll,
+        disableAll: !linesStates.length || linesRefs.current[0].myKey === tempKey
     }
-    
-    // the list of lines to display
-    // does not contain React elements directly, but functions that return them
-    // otherwise, the children lines do not rerender when this parent component (SpendingsBase) is rerendered
-    const lines = useRef(initial.reduce((prev, curr) => {
-        const { key } = curr;
-        return {
-            ...prev,
-            [key] : getPermanentLine(curr, key)
-        };
-    }, {}));
 
-    if (removedKey.current) {
-        delete lines.current[removedKey.current];
-        removedKey.current = null;
+    const resultLineProps = {
+        tradHook: t,
+        spendings: linesStates.reduce((prev, curr) =>  prev + curr.total, 0)
     }
 
     return (
-        <Paper variant='side-primary' reversed sx={{
-            display: 'flex', flexDirection: 'column',
-            justifyContent: 'flex-start', alignItems: 'flex-start',
-            p: 1, m: 1,
-            width: '100%'
-        }}>
-            <Typography variant='h4' fontWeight={'bold'} >{title}</Typography>
-            <Box sx={{display : 'flex', justifyContent : 'flex-end', width : '100%'}} >
-                <CheckVisible checked={!!checkedSummary.current}
-                    indeterminate={checkedSummary.current === null}
-                    onChange={handleAllChecked} />
-            </Box>
+        <Grid container direction='row' spacing={2}
+            component={Paper} variant='side-primary' reversed
+            m={2} p={0} pr={19} >
+            <Grid item xs={remainingColumns} />
+            <Grid item xs={lineColumns} children={<LabelsLine fields={[
+                    t('name-label'),
+                    t('amount-label'),
+                    t('tpy-label'),
+                    t('total-label')
+                ]} />}
+            />
+            <Grid item xs={controlColumns} children={<TopControlGroup {...topControlGroupProps} />} />
             {
-                keys.map((k) => {
-                    return lines.current[k] ? lines.current[k](checked) : <SpendingsLine tradHook={t} key={tempKey} isChecked={() => 'temp'}
-                    addLine={addLine} removeSelf={removeLine(tempKey)} {...other} />
-                })
+                linesStates.map(
+                    (line, index) => {
+                        const lineProps = {
+                            ...line, ...linesRefs.current[index],
+                            myIndex: index,
+                            notifyChange: (change) => {
+                                linesRefs.current[index] = { ...linesRefs.current[index], ...change };
+                            },
+                            setMyTotal: setTotal(index),
+                            takenNames: linesRefs.current.map((item) => item.myKey)
+                        };
+                        return (
+                            <Grid key={linesRefs.current[index].myKey} container
+                                spacing={2} item xs={totalColumns} component={ValidatorWrapper} exposeIndicator >
+                                {
+                                    (args) => {
+                                        const { getChildrenIsValid, getIndicator, ...indicatorControl } = args;
+                                        return (
+                                            <>
+                                                <Grid item xs={remainingColumns} {...centeredInCell}
+                                                    children={getIndicator()} />
+                                                <Grid item xs={lineColumns} {...centeredInCell} textAlign='center'
+                                                    children={
+                                                    <SpendingsLine addLine={addLine} tradHook={t} {...lineProps}
+                                                        {...indicatorControl} />
+                                                }/>
+                                                <Grid item xs={controlColumns} {...centeredInCell} children={
+                                                    <ControlGroup lineIsValid={getChildrenIsValid()}
+                                                        {...controlGroupProps(index)} />
+                                                }/>
+                                            </>
+                                        )
+                                    }
+                                }
+                            </Grid>
+                        )
+                    }
+                )
             }
-            <AddLineButton title={t('add')} add={addTemp} disabled={keys.includes(tempKey)} />
-        </Paper>
+            <Grid item xs={remainingColumns} />
+            <Grid item xs={lineColumns} sx={{ textAlign : 'center' }} children={
+                <AddLineButton title={t('add')} add={addLine} disabled={linesRefs.current.at(-1)?.myKey === tempKey} />
+            }/>
+            <Grid item xs={controlColumns} />
+            <Grid item xs={remainingColumns} />
+            <Grid item xs={lineColumns} sx={{ textAlign : 'center' }} children={<ResultLine {...resultLineProps} />} />
+            <Grid item xs={controlColumns} />
+        </Grid>
     )
 }
 
 const periodic = [
     {
-        key: ':housing:',
+        myKey: null,
         defaultName: null,
         nameF: t => t('housing'),
         defaultAmount: 400,
         defaultTPY: 12
     },
     {
-        key: ':food:',
+        myKey: null,
         defaultName: null,
         nameF: t => t('food'),
         defaultAmount: 200,
@@ -370,7 +601,7 @@ const periodic = [
 
 const occasional = [
     {
-        key: ':total:',
+        myKey: null,
         defaultName: null,
         nameF: t => t('total'),
         defaultAmount: 2000
@@ -383,6 +614,7 @@ const Spendings = (props) => {
     [periodic, occasional].forEach((list) => list.forEach((item) => {
         if (item.nameF) {
             item.defaultName = item.nameF(t);
+            item.myKey = item.nameF(t);
             delete item.nameF;
         }
     }));
@@ -392,7 +624,7 @@ const Spendings = (props) => {
             display: 'flex', flexDirection: 'column',
             justifyContent: 'space-around', alignItems: 'center',
             p: 1, m: 1,
-            width: '100%'
+            width: '99%'
         }}>
             <SpendingsBase tradHook={t} title={t('periodic-title')} initial={periodic} />
             {/* <SpendingsBase tradHook={t} title={t('occasional-title')} noPeriodic initial={occasional} /> */}
