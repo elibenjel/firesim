@@ -3,9 +3,7 @@
     "spendings": "Profil de dépenses",
     "market": "Evolution du marché",
     "sim": "Simulateur",
-    "periodic-title": "Dépenses périodiques",
-    "occasional-title": "Dépenses occasionnelles",
-    "name-label": "Nom",
+    "name-label": "Etiquette",
     "amount-label": "Montant",
     "tpy-label": "Fréquence par an",
     "modify": "Modifier",
@@ -22,6 +20,15 @@
     "total-label": "Total",
     "total-help": " ",
     "currency": "€",
-    "monthlySpendings": "Dépenses mensuelles moyennes ",
-    "annualSpendings": "Total annuel"
+    "monthly-spendings": "Dépenses mensuelles moyennes ",
+    "annual-spendings": "Total annuel",
+    "create": "Sauvegarder nouveau profil",
+    "create-success": "Profile de dépenses ajouté !",
+    "create-label": "Nom du nouveau profil",
+    "overwrite": "Ecraser",
+    "overwrite-success": "Modifications enregistrées !",
+    "load": "Charger",
+    "load-success": "Chargement réussi !",
+    "remove-success": "Profil supprimé !",
+    "select-label": "Sélectionner un profil existant"
 }

@@ -1,9 +1,11 @@
 import React, { useEffect, useState, useRef } from "react";
+import { useMutation, useQuery, useQueryClient } from 'react-query';
 import { useTranslation } from "react-i18next";
 import { useTheme } from '@mui/material/styles';
 import {
     Box,
     Paper,
+    Button,
     IconButton,
     TextField,
     Typography,
@@ -11,7 +13,11 @@ import {
     Checkbox,
     InputAdornment,
     Divider,
-    Grid
+    Grid,
+    MenuItem,
+    Snackbar,
+    Alert,
+    Slide
 } from '@mui/material';
 import {
     Edit,
@@ -26,10 +32,14 @@ import {
 } from '@mui/icons-material';
 
 import ValidatorWrapper from "../InformationDisplay/ValidatorWrapper.jsx";
+import {
+    fetchRequestedProfile, fetchMySpendingProfileNames,
+    saveSpendingProfile, removeSpendingProfile
+} from '../../services/simulation.js';
 import * as functions from '../../utils/functions';
 
 
-const tempKey = '|temp|';
+const tempKey = -1;
 const totalColumns = 12;
 const lineColumns = 8;
 const controlColumns = 3;
@@ -80,7 +90,7 @@ const ControlButtonFiller = (props) => {
     )
 }
 
-const TopControlGroup = (props) => {
+const LinesGlobalController = (props) => {
     const { tradHook : t, deactivateAll, handleDeactivateAll, disableAll } = props;
 
     return (
@@ -95,7 +105,7 @@ const TopControlGroup = (props) => {
     )
 }
 
-const ControlGroup = (props) => {
+const LineController = (props) => {
     const { tradHook : t,
         lineIsLocked, setLineIsLocked, lineIsDeactivated, setLineIsDeactivated,
         lineIsTemp, lineIsValid, setUndo, removeLine } = props;
@@ -168,16 +178,15 @@ const LabelsLine = (props) => {
 }
 
 const ResultLine = (props) => {
-    const { tradHook : t, spendings } = props;
-    // const total = 1000;
+    const { tradHook : t, total } = props;
 
     const formatLabel = (content) => `${content}:`;
     const formatValue = (value) => `${Math.floor(value)} ${t('currency')}`;
     const cells = [
-        { content : t('monthlySpendings'), xs : 'auto', isLabel : true, key : 1 },
-        { content : Number(spendings / 12), xs : 'auto', isLabel : false, key : 2 },
-        { content : t('annualSpendings'), xs : 'auto', isLabel : true, key : 3 },
-        { content : Number(spendings), xs : 'auto', isLabel : false, key : 4 }
+        { content : t('monthly-spendings'), xs : 'auto', isLabel : true, key : 1 },
+        { content : Number(total / 12), xs : 'auto', isLabel : false, key : 2 },
+        { content : t('annual-spendings'), xs : 'auto', isLabel : true, key : 3 },
+        { content : Number(total), xs : 'auto', isLabel : false, key : 4 }
     ];
 
     const typoProps = (isLabel) => ({
@@ -205,7 +214,7 @@ const SpendingsLine = (props) => {
         tradHook : t, myIndex,
         setChildrenIsValid, setHide,
         defaultName, defaultAmount, defaultTPY,
-        myKey, locked, deactivated, outdated, notifyChange, takenNames,
+        myKey, locked, deactivated, outdated, notifyChange,
         addLine, setMyTotal, noPeriodic,
     } = props;
 
@@ -226,14 +235,14 @@ const SpendingsLine = (props) => {
     total.current = Number(amount*timesPerYear);
 
     useEffect(() => {
-        if (myKey !== tempKey) {
+        if (myKey !== tempKey && locked) {
             setMyTotal(deactivated ? 0 : total.current);
         }
-    }, [total.current, deactivated]);
+    }, [total.current, deactivated, locked]);
 
     // manage the valid state of the line content to notify ValidatorWrapper
     const validateName = () => {
-        return name.length > 0 && name.length < 100 && (myKey !== tempKey || !takenNames.includes(name));
+        return name.length > 0 && name.length < 100;
     }
     
     const amIValid = validateName() && functions.isNumber(amount) && amount >= 0;
@@ -254,7 +263,11 @@ const SpendingsLine = (props) => {
 
         if (myKey === tempKey) {
             setLockState({ name, amount, timesPerYear });
-            addLine({ myKey : name, defaultName : name, defaultAmount : amount, defaultTPY : timesPerYear });
+            addLine({
+                defaultName : name, currentName : name,
+                defaultAmount : amount, currentAmount : amount,
+                defaultTPY : timesPerYear, currentTPY : timesPerYear
+            });
         } else if (outdated || !amIValid) {
             setName(lockState.name);
             setAmount(lockState.amount);
@@ -262,6 +275,7 @@ const SpendingsLine = (props) => {
             notifyChange({ outdated : false });
         } else {
             setLockState({ name, amount, timesPerYear });
+            notifyChange({ currentName : name, currentAmount : amount, currentTPY : timesPerYear });
         }
     }, [locked]);
 
@@ -281,7 +295,7 @@ const SpendingsLine = (props) => {
     }
 
     const handleNameBlur = (event) => {
-        let content = event.target.value;
+        return;
     }
 
     const handleAmountChange = (event) => {
@@ -374,10 +388,10 @@ const AddLineButton = (props) => {
     )
 }
 
-const SpendingsBase = (props) => {
-    const { tradHook : t, title, initial = [], ...other } = props;
+const SpendingsPanel = (props) => {
+    const { tradHook : t, initial = [], trackProfile, ...other } = props;
     
-    // locked and deactivated are the line states that cause visual modifications
+    // the line states that cause visual modifications
     const [linesStates, setLinesStates] = useState(() => initial.map(item => (
         {
             locked: true,
@@ -386,10 +400,19 @@ const SpendingsBase = (props) => {
         }
     )));
 
+    // keep track of the number of created lines, and use it for the prop key of each new line
+    const createdLines = useRef(initial.length);
+
+    const totalSpendings = useRef(0);
+
     // the remaining line state variables do not cause visual modifications
-    const linesRefs = useRef(initial.map(item => (
+    const linesRefs = useRef(initial.map((item, index) => (
         {
-            ...item, // key, defaultName, defaultAmount, defaultTPY
+            myKey: index,
+            ...item, // myKey, defaultName, defaultAmount, defaultTPY
+            currentName: item.defaultName,
+            currentAmount: item.defaultAmount,
+            currentTPY: item.defaultTPY, // keep track of each line own state variables
             outdated: false,
         }
     )));
@@ -470,7 +493,8 @@ const SpendingsBase = (props) => {
     const addLine = (line) => {
         if (line) {
             linesRefs.current.pop();
-            linesRefs.current = [...linesRefs.current, { ...line, outdated : false }]
+            linesRefs.current = [...linesRefs.current, { myKey : createdLines.current, ...line, outdated : false }];
+            createdLines.current += 1;
             setLinesStates((current) => [ ...current.slice(0, -1), {
                 locked: true,
                 deactivated: false,
@@ -490,11 +514,23 @@ const SpendingsBase = (props) => {
         }
     }
 
+    // let each line set their total by themselves, and compute the total of all lines
     const setTotal = (index) => (value) => {
         setLinesStates((current) => current.map(
             (item, i) => i !== index ? item : { ...item, total : value }
         ));
     }
+
+    totalSpendings.current = linesStates.reduce((prev, curr) =>  prev + curr.total, 0);
+
+    // Relay to parent the desired info about this spending profile
+    trackProfile({
+        spendings: linesRefs.current.reduce((prev, curr) => {
+            const { currentName, currentAmount, currentTPY } = curr;
+            return curr.myKey !== tempKey ? [...prev, { currentName, currentAmount, currentTPY }] : prev;
+        }, []),
+        total: totalSpendings.current
+    });
 
     const controlGroupProps = (index) => {
         const myProps = { ...linesStates[index], ...linesRefs.current[index] };
@@ -514,7 +550,7 @@ const SpendingsBase = (props) => {
 
     const resultLineProps = {
         tradHook: t,
-        spendings: linesStates.reduce((prev, curr) =>  prev + curr.total, 0)
+        total: totalSpendings.current
     }
 
     return (
@@ -529,7 +565,7 @@ const SpendingsBase = (props) => {
                     t('total-label')
                 ]} />}
             />
-            <Grid item xs={controlColumns} children={<TopControlGroup {...topControlGroupProps} />} />
+            <Grid item xs={controlColumns} children={<LinesGlobalController {...topControlGroupProps} />} />
             {
                 linesStates.map(
                     (line, index) => {
@@ -540,7 +576,6 @@ const SpendingsBase = (props) => {
                                 linesRefs.current[index] = { ...linesRefs.current[index], ...change };
                             },
                             setMyTotal: setTotal(index),
-                            takenNames: linesRefs.current.map((item) => item.myKey)
                         };
                         return (
                             <Grid key={linesRefs.current[index].myKey} container
@@ -558,7 +593,7 @@ const SpendingsBase = (props) => {
                                                         {...indicatorControl} />
                                                 }/>
                                                 <Grid item xs={controlColumns} {...centeredInCell} children={
-                                                    <ControlGroup lineIsValid={getChildrenIsValid()}
+                                                    <LineController lineIsValid={getChildrenIsValid()}
                                                         {...controlGroupProps(index)} />
                                                 }/>
                                             </>
@@ -582,42 +617,258 @@ const SpendingsBase = (props) => {
     )
 }
 
-const periodic = [
+const MainController = (props) => {
+    const {
+        tradHook : t,
+        handleCreate, handleLoad, handleOverwrite, handleRemove,
+        myProfileNames, requestedProfile
+    } = props;
+
+    const [profileName, setProfileName] = useState('');
+    const [selectedProfile, setSelectedProfile] = useState('')
+
+    const handleProfileNameChange = (event) => {
+        setProfileName(event.target.value);
+    }
+    
+    const handleCreateClick = (event) => {
+        handleCreate(profileName);
+        setSelectedProfile(profileName);
+    }
+
+    const handleSelectedProfileChange = (event) => {
+        setSelectedProfile(event.target.value);
+        // selectedProfileRef.current = event.target.value;
+    }
+
+    const handleLoadClick = (event) => {
+        handleLoad(selectedProfile);
+    }
+
+    const handleOverwriteClick = (event) => {
+        handleOverwrite(selectedProfile);
+    }
+
+    const handleRemoveClick = (event) => {
+        handleRemove(selectedProfile);
+        if (selectedProfile !== requestedProfile) {
+            setSelectedProfile(requestedProfile);
+        } else {
+            setSelectedProfile('');
+        }
+    }
+    
+    const fieldProps = {
+        id: `profile-name-input`, variant: 'filled',
+        label: t('create-label'), size: 'small', value: profileName,
+        color: 'success'
+    };
+
+    const selectProps = {
+        id: `profile-name-selector`, variant: 'filled', value: selectedProfile,
+        label: t('select-label'), size: 'small', color: 'success', sx: { minWidth: 300, ml: 15 }
+    }
+
+    return (
+        <Paper elevation={1} p={1} sx={{
+            alignSelf : 'flex-start',
+            display: 'flex', justifyContent: 'flex-start', alignItems: 'center',
+            p: 1
+            }} >
+                <TextField {...fieldProps} onChange={handleProfileNameChange} />
+                <Button variant='contained' color='primary'
+                    onClick={handleCreateClick}
+                    disabled={profileName.length === 0}
+                    sx={{ ml : 1 }}>{t('create')}</Button>
+                <TextField select {...selectProps} onChange={handleSelectedProfileChange}
+                    children={
+                        myProfileNames ?
+                        myProfileNames.map((item) => (
+                            <MenuItem key={item} value={item}>{item}</MenuItem>
+                        ))
+                        : <MenuItem key={''} value={''}>{''}</MenuItem>
+                }/>
+                <Button variant='contained' color='primary'
+                    onClick={handleLoadClick}
+                    disabled={selectedProfile.length === 0}
+                    sx={{ ml : 1 }}>{t('load')}</Button>
+                <Button variant='contained' color='primary'
+                    onClick={handleOverwriteClick}
+                    disabled={selectedProfile.length === 0}
+                    sx={{ ml : 1 }}>{t('overwrite')}</Button>
+                <Button variant='contained' color='primary'
+                    onClick={handleRemoveClick}
+                    disabled={selectedProfile.length === 0}
+                    sx={{ ml : 1 }}>{t('remove')}</Button>
+        </Paper>
+    )
+}
+
+const initialSpendings = [
     {
-        myKey: null,
+        // myKey: null,
         defaultName: null,
-        nameF: t => t('housing'),
+        defaultNameF: t => t('housing'),
         defaultAmount: 400,
         defaultTPY: 12
     },
     {
-        myKey: null,
+        // myKey: null,
         defaultName: null,
-        nameF: t => t('food'),
+        defaultNameF: t => t('food'),
         defaultAmount: 200,
         defaultTPY: 12
     }
 ];
 
-const occasional = [
-    {
-        myKey: null,
-        defaultName: null,
-        nameF: t => t('total'),
-        defaultAmount: 2000
-    }
-]
-
 const Spendings = (props) => {
     const { t } = useTranslation('MainSim');
+    const [makeFeedback, setMakeFeedback] = useState(false);
+    const feedback = useRef('');
+    const feedbackSeverity = useRef('success');
+    const [requestedProfile, setRequestedProfile] = useState('');
+    const spendingProfile = useRef({ spendings : [], total : 0 });
+    const disableFetchProfileQuery = useRef(false);
+
+    const queryClient = useQueryClient();
     
-    [periodic, occasional].forEach((list) => list.forEach((item) => {
-        if (item.nameF) {
-            item.defaultName = item.nameF(t);
-            item.myKey = item.nameF(t);
-            delete item.nameF;
+    initialSpendings.forEach((item) => {
+        if (item.defaultNameF) {
+            item.defaultName = item.defaultNameF(t);
+            // item.myKey = item.defaultNameF(t);
+            delete item.defaultNameF;
         }
-    }));
+    });
+
+    const handleError = ({ info, disableFeedback } = {}) => (err) => {
+        const fb = info ? `${info}\n${err}` : err;
+        feedback.current = fb;
+        feedbackSeverity.current = 'error';
+        !disableFeedback && setMakeFeedback(true);
+    }
+
+    const handleSuccess = ({ info, disableFeedback, callback = () => null } = {}) => (data) => {
+        const errors = data?.errors;
+        if (errors) {
+            const msg = errors.reduce((payload, curr) => `${payload}\n${curr.message}`, '');
+            feedback.current = `Request failed:\n${msg}`;
+            feedbackSeverity.current = 'warning';
+        } else if (info) {
+            feedback.current = info;
+            feedbackSeverity.current = 'success';
+        }
+
+        !disableFeedback && setMakeFeedback(true);
+        callback(data);
+    }
+
+    const { data : myProfileNames, refetch : refetchProfileNames } = useQuery(
+        'mySpendingProfileNames',
+        fetchMySpendingProfileNames,
+        {
+            refetchOnMount: false, refetchOnWindowFocus: false, refetchOnReconnect: false,
+            keepPreviousData: true,
+            onError : handleError(), onSuccess : handleSuccess({ disableFeedback : true })
+        }
+    );
+
+    useEffect(() => {
+        refetchProfileNames();
+    }, []);
+
+    const { data : fetchedProfile, dataUpdatedAt, refetch : refetchRequestedProfile } = useQuery(
+        ['fetchedProfile', { name : requestedProfile }],
+        fetchRequestedProfile,
+        {
+            enabled: !disableFetchProfileQuery.current,
+            refetchOnMount: false, refetchOnWindowFocus: false, refetchOnReconnect: false,
+            keepPreviousData: true, initialData: initialSpendings,
+            onError : handleError(),
+            onSuccess : handleSuccess({ info : t('load-success') })
+        }
+    );
+
+    const {
+        mutate: create,
+        isError: createIsErr,
+        error: createErr
+    } = useMutation(saveSpendingProfile, { onSuccess : handleSuccess({ info : t('create-success'), callback : () => queryClient.invalidateQueries('mySpendingProfileNames') }), onError : handleError() });
+
+    const {
+        mutate: overwrite,
+        isError: overwriteIsErr,
+        error: overwriteErr
+    } = useMutation(saveSpendingProfile, { onSuccess : handleSuccess({ info : t('overwrite-success') }), onError : handleError() });
+
+    const {
+        mutate: remove,
+        isError: removeIsErr,
+        error: removeErr
+    } = useMutation(removeSpendingProfile, { onSuccess : handleSuccess({ info : t('remove-success'), callback : () => queryClient.invalidateQueries('mySpendingProfileNames') }), onError : handleError() });
+
+
+    const handleCreate = (name) => {
+        const payload = {
+            name,
+            spendings: spendingProfile.current.spendings.reduce((prev, curr) => {
+                const { currentName : label, currentAmount : amount, currentTPY : frequency } = curr;
+                return [...prev, { label, amount, frequency }]
+            }, []),
+            total: spendingProfile.current.total
+        };
+
+        create(payload);
+        setRequestedProfile(name);
+        disableFetchProfileQuery.current = true;
+    };
+
+    const handleLoad = (name) => {
+        disableFetchProfileQuery.current = false;
+        setRequestedProfile((curr) => {
+            if (name === curr) refetchRequestedProfile();
+            return name
+        });
+    }
+
+    const handleOverwrite = (name) => {
+        const payload = {
+            name,
+            spendings: spendingProfile.current.spendings.reduce((prev, curr) => {
+                const { currentName : label, currentAmount : amount, currentTPY : frequency } = curr;
+                return [...prev, { label, amount, frequency }]
+            }, []),
+            total: spendingProfile.current.total,
+            overwrite: true
+        };
+
+        overwrite(payload);
+    }
+
+    const handleRemove = (name) => {
+        const payload = { name };
+        remove(payload);
+    }
+
+    const onSnackbarClose = () => {
+        setMakeFeedback(false);
+    }
+
+    const mainControllerProps = {
+        tradHook: t,
+        handleCreate, handleLoad, handleOverwrite, handleRemove,
+        myProfileNames, requestedProfile
+    }
+
+    const trackProfile = ({ spendings, total }) => {
+        spendingProfile.current.spendings = spendings;
+        spendingProfile.current.total = total;
+    }
+
+    const spendingsPanelProps = {
+        tradHook: t, trackProfile, initial: fetchedProfile
+    }
+
+    console.log('rendered')
 
     return (
         <Box sx={{
@@ -626,10 +877,89 @@ const Spendings = (props) => {
             p: 1, m: 1,
             width: '99%'
         }}>
-            <SpendingsBase tradHook={t} title={t('periodic-title')} initial={periodic} />
-            {/* <SpendingsBase tradHook={t} title={t('occasional-title')} noPeriodic initial={occasional} /> */}
+            <Snackbar open={makeFeedback} autoHideDuration={5000}
+                anchorOrigin={{ vertical : 'bottom', horizontal : 'center' }}
+                TransitionComponent={Slide}
+                onClose={onSnackbarClose} >
+                <Alert onClose={onSnackbarClose} severity={feedbackSeverity.current} sx={{ width: '100%' }}>
+                    {feedback.current}
+                </Alert>
+            </Snackbar>
+            <MainController {...mainControllerProps} />
+            <SpendingsPanel key={dataUpdatedAt} {...spendingsPanelProps} />
         </Box>
     )
 }
+
+// const names = ['test', 'maisoui', 'a'];
+// const Spendings = (props) => {
+//     const selectedProfileRef = useRef('test');
+//     const [selectedProfile, setSelectedProfile] = useState('test');
+//     const runQuery = useRef(false);
+//     const onSuccessData = useRef(null);
+//     const counter = useRef(0);
+//     counter.current += 1;
+//     const history = useRef([]);
+//     const { isLoading, isFetching, isIdle, isStale, isSuccess, data, refetch : refetchProfile } = useQuery(
+//         ['requestedProfile', { name: selectedProfile }],
+//         fetchRequestedProfile,
+//         // { cacheTime : 5, staleTime: 10 }
+//         {
+//             refetchOnMount: false, refetchOnWindowFocus: false, refetchOnReconnect: false,
+//             keepPreviousData: true,
+//             initialData: initialSpendings,
+//             onSuccess: (res) => {
+//                 onSuccessData.current = res;
+//                 runQuery.current = false;
+//                 console.log('res : ', res)
+//             },
+//         }
+//     );
+
+//     // const { isLoading, isFetching, isIdle, isStale, data : requestedProfile, dataUpdatedAt, isSuccess, refetch : refetchProfileNames } = useQuery(
+//     //     ['other'],
+//     //     fetchMySpendingProfileNames,
+//     //     { cacheTime : 0, staleTime: 10 }
+//         // { initialData: initialSpendings }
+//     // );
+
+//     // useEffect(() => {
+//     //     const currIndex = names.indexOf(selectedProfileRef.current);
+//     //     selectedProfileRef.current = names.at((currIndex+1)%3);
+//     // });
+//     history.current.push({
+//         requesting : selectedProfile,
+//             success: JSON.stringify(isSuccess), loading : JSON.stringify(isLoading),  fetching : JSON.stringify(isFetching),  idle : JSON.stringify(isIdle), stale: JSON.stringify(isStale),
+//             data: JSON.stringify(data),
+//             rendering : counter.current,
+//     })
+
+//     const handleClick = () => {
+//         const currIndex = names.indexOf(selectedProfile);
+//         setSelectedProfile(names.at((currIndex+1)%3));
+//         runQuery.current = true;
+//         // refetchProfile();
+//     }
+
+//     return (
+//         <Box display='flex' >
+//             <Box display='flex' flexDirection='column' m={4} >
+//                 {
+//                     history.current.map((item, index) => (
+//                         <Box display='flex' flexDirection='column' key={index}>
+//                             <div>rendering count : {item.rendering}</div>
+//                             <div>requesting : {item.requesting}</div>
+//                             <div>success : {item.success} | loading : {item.loading} | fetching : {item.fetching} | idle : {item.idle} | stale : {item.stale}</div>
+//                             <div>{item.data}</div>
+//                             <div>-------------------------</div>
+//                             <div>-------------------------</div>
+//                         </Box>
+//                     ))
+//                 }
+//             </Box>
+//             <Button variant='contained' onClick={handleClick} children='refetch' size='small' sx={{maxHeight:'100px'}} />
+//         </Box>
+//     )
+// }
 
 export default Spendings;

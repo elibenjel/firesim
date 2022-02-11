@@ -8,6 +8,24 @@ const typeDefs = gql`
         token: String
     }
 
+    type SpendingProfile {
+        name: String!
+        spendings: [Spending!]!
+        total: Float!
+    }
+
+    type Spending {
+        label: String!
+        amount: Float!
+        frequency: Int!
+    }
+
+    input SpendingInput {
+        label: String!
+        amount: Float!
+        frequency: Int!
+    }
+
     enum Role {
         USER
         ADMIN
@@ -16,11 +34,15 @@ const typeDefs = gql`
     type Query {
         whoami(email: String!): User
         users: [User!]
+        mySpendingProfileNames: [String!]
+        loadSpendingProfile(name: String!): SpendingProfile
     }
 
     type Mutation {
         login(email: String!, password: String!): User
         signup(email: String!, password: String!): User
+        saveSpendingProfile(name: String!, spendings: [SpendingInput!]!, total: Float!, overwrite: Boolean): ID
+        removeSpendingProfile(name: String!): Boolean
     }
 `;
 

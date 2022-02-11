@@ -11,6 +11,6 @@ class Enum {
     }
 }
   
-const UserRoles = new Enum('USER', 'ADMIN');
+const UserRoles = new Enum('USER', 'ADMIN', 'UNKOWN');
   
 module.exports.UserRoles = UserRoles;

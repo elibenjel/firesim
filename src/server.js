@@ -18,6 +18,7 @@ const mg = require('mongoose');
 const { UserRoles } = require('./enums');
 const { getModels } = require('./datasources/models');
 const UserAPI = require('./datasources/user');
+const SimulationAPI = require('./datasources/simulation');
 
 function setupExpressMiddleware() {
   const app = express();
@@ -62,26 +63,33 @@ async function startApolloServer(typeDefs, resolvers) {
     resolvers,
     plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
     dataSources: () => ({
-        userAPI: new UserAPI({ models })
+        userAPI: new UserAPI({ models }),
+        simulationAPI: new SimulationAPI({ models })
     }),
     context: async function({ req }) {
+      console.log('Received ', req.method, ' request:\n body: ', req.body);
       if (!connectedToDB) {
         console.log('Connecting to database...');
-        mg.connect(process.env.MONGODB_URI).then(() => console.log('Connected !')).catch((err) => { throw err });
-        connectedToDB = true;
+        await mg.connect(process.env.MONGODB_URI);
+        try {
+          console.log('Connected !');
+          connectedToDB = true;
+        } catch (err) {
+          console.log('Connection to database failed');
+        }
       }
   
-      if (process.env.NODE_ENV !== 'production' && req.headers.origin === 'https://studio.apollographql.com') {
-        console.log(typeDefs);
-        return {user : { token : '', roles : [UserRoles.ADMIN]}};
-      }
+      // if (process.env.NODE_ENV !== 'production' && req.headers.origin === 'https://studio.apollographql.com') {
+      //   console.log(typeDefs);
+      //   return {user : { token : '', roles : [UserRoles.ADMIN]}};
+      // }
   
-      // simple auth check on every request
+      // simple auth check on every request, returns a default unkown user if the authentication fails
       const token = req.headers?.authorization?.split(' ')[1] || null;
-      const user = token ? await UserAPI.authUser(token) : null;
+      const user = await UserAPI.authUser(token, models);
       // if (!user) throw new AuthenticationError('You must be logged in.');
       
-      return { user: {token : token, roles : user?.roles} };
+      return { user: { token : token, roles : user?.roles, document : user } };
     },
     formatError: (err) => {
       console.error(err.extensions.exception.stacktrace);
