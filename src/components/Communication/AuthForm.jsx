@@ -14,8 +14,8 @@ import {
     TextField
 } from '@mui/material';
 
-import { loginUser, signupUser } from '../../services/user.js';
-import ValidatorWrapper from '../InformationDisplay/ValidatorWrapper.jsx';
+import { loginUser, signupUser } from '../../services/authentication.js';
+import ValidatorWrapper from '../Feedback/ValidatorWrapper.jsx';
 // import ValidatorField from '../Input/ValidatorField.jsx';
 
 const countries = [

@@ -3,8 +3,8 @@ import { useTranslation } from 'react-i18next';
 import { TextField, InputAdornment } from "@mui/material";
 import { Help } from '@mui/icons-material';
 
-import ValidatorWrapper from '../InformationDisplay/ValidatorWrapper.jsx';
-import HelpBubbleWrapper from '../InformationDisplay/HelpBubbleWrapper.jsx';
+import ValidatorWrapper from '../Feedback/ValidatorWrapper.jsx';
+import HelpBubbleWrapper from '../Feedback/HelpBubbleWrapper.jsx';
 
 
 export const ParameterField = (props) => {

@@ -1,106 +1,150 @@
 import axios from 'axios';
+import { useMutation, useQuery } from 'react-query';
 
-export async function fetchMySpendingProfileNames() {
-    const payload = {
-        query : `query Query {
-            mySpendingProfileNames
-        }`
-    };
 
-    try {
-        const data = await axios.post('/graphql', JSON.stringify(payload), {
-            headers: {
-              'content-type': 'application/json'
+export const useFetchSpendingProfile = ({ queryArgs, feedbackOptions, queryOptions, queryCallbacks, queryClient }) => {
+    const { requestedProfile, initialSpendings, spendingsContentKey } = queryArgs;
+    const { enabled } = queryOptions;
+    const myQueryKey = [
+        'loadSpendingProfile',
+        {
+            graphqlArgs: {
+                args: {
+                    name : { graphqlType: 'String!', value : requestedProfile}
+                },
+                selection: `{
+                    spendings {
+                        label,
+                        amount,
+                        frequency
+                    }
+                }`
             },
-        });
+            feedbackOptions
+        },
+        spendingsContentKey
+    ];
 
-        return data.data.data.mySpendingProfileNames;
-    } catch (error) {
-        throw error;
-    }
-}
-
-export async function fetchRequestedProfile({ queryKey }) {
-    const [_, { name }] = queryKey;
-    const payload = {
-        query : `query LoadSpendingProfile($name: String!) {
-            loadSpendingProfile(name: $name) {
-              spendings {
-                label,
-                amount,
-                frequency
-              }
-            }
-          }`,
-          variables: {
-              name
-          }
-    };
-
-    try {
-        const data = await axios.post('/graphql', JSON.stringify(payload), {
-            headers: {
-                'content-type': 'application/json',
-                // 'Cache-Control': 'no-cache',
-                // 'Pragma': 'no-cache',
-                // 'Expires': '0',
+    const myQueryOptions = {
+        ...queryCallbacks,
+        enabled,
+        refetchOnMount: false, refetchOnWindowFocus: false, refetchOnReconnect: false,
+        keepPreviousData: true, cacheTime: 0,
+        initialData: {
+            error: null,
+            data: {
+                spendings: initialSpendings
             },
-        });
-        console.log('fetched : ', data)
-        return data.data.data.loadSpendingProfile.spendings.map(item => {
-            return {
-                defaultName: item.label,
-                defaultAmount: item.amount,
-                defaultTPY: item.frequency
-            }
-        });
-    } catch (error) {
-        throw error;
-    }
-}
-
-export async function saveSpendingProfile({ name, spendings, total, overwrite = false }) {
-    const payload = {
-        query : `mutation SaveSpendingProfile($name: String!, $spendings: [SpendingInput!]!, $total: Float!, $overwrite: Boolean) {
-            saveSpendingProfile(name: $name, spendings: $spendings, total: $total, overwrite: $overwrite)
-        }`,
-        variables: {
-            name, spendings, total, overwrite
+            feedback: ''
+        },
+        select: (res) => {
+            return queryClient.getDefaultOptions().queries.select(res).spendings.map(item => {
+                return {
+                    defaultName: item.label,
+                    defaultAmount: item.amount,
+                    defaultTPY: item.frequency
+                }
+            })
         }
     };
+    return { myQueryKey, ...useQuery(myQueryKey, myQueryOptions) };
+}
 
-    try {
-        const data = await axios.post('/graphql', JSON.stringify(payload), {
-            headers: {
-              'content-type': 'application/json'
-            },
-        });
+export const useFetchMySpendingProfileNames = () => {
+    const myQueryKey = [
+        'mySpendingProfileNames',
+        {
+            graphqlArgs : {},
+            feedbackOptions : { disableOnSuccess : true }
+        }
+    ];
 
-        return data.data;
-    } catch (error) {
-        throw error;
+    const myQueryOptions = {
+        refetchOnMount: false, refetchOnWindowFocus: false, refetchOnReconnect: false
+    };
+    return { myQueryKey, ...useQuery(myQueryKey, myQueryOptions) }
+}
+
+export const useCreateSpendingProfile = () => {
+    const { mutate } = useMutation();
+    return {
+        mutate: ({ mutationArgs, feedbackOptions, mutationCallbacks }) => {
+            const { nameValue, spendingsValue, totalValue } = mutationArgs;
+            const payload = [
+                'saveSpendingProfile',
+                {
+                    graphqlArgs: {
+                        args: {
+                            name: { graphqlType : 'String!', value: nameValue },
+                            spendings: {
+                                graphqlType: '[SpendingInput!]!',
+                                value: spendingsValue.reduce((prev, curr) => {
+                                    const { currentName : label, currentAmount : amount, currentTPY : frequency } = curr;
+                                    return [...prev, { label, amount, frequency }]
+                                }, [])
+                            },
+                            total: { graphqlType : 'Float!', value : totalValue },
+                            overwrite: { graphqlType : 'Boolean', value : false }
+                        }
+                    },
+                    feedbackOptions
+                }
+            ];
+
+            mutate(payload, mutationCallbacks);
+        }
     }
 }
 
-export async function removeSpendingProfile({ name }) {
-    const payload = {
-        query : `mutation RemoveSpendingProfile($name: String!) {
-            removeSpendingProfile(name: $name)
-        }`,
-        variables: {
-            name
+export const useOverwriteSpendingProfile = () => {
+    const { mutate } = useMutation();
+    return {
+        mutate: ({ mutationArgs, feedbackOptions }) => {
+            const { nameValue, spendingsValue, totalValue } = mutationArgs;
+            const payload = [
+                'saveSpendingProfile',
+                {
+                    graphqlArgs: {
+                        args: {
+                            name: { graphqlType : 'String!', value: nameValue },
+                            spendings: {
+                                graphqlType: '[SpendingInput!]!',
+                                value: spendingsValue.reduce((prev, curr) => {
+                                    const { currentName : label, currentAmount : amount, currentTPY : frequency } = curr;
+                                    return [...prev, { label, amount, frequency }]
+                                }, [])
+                            },
+                            total: { graphqlType : 'Float!', value : totalValue },
+                            overwrite: { graphqlType : 'Boolean', value : true }
+                        }
+                    },
+                    feedbackOptions
+                }
+            ];
+    
+            mutate(payload);
         }
-    };
+    }
+}
 
-    try {
-        const data = await axios.post('/graphql', JSON.stringify(payload), {
-            headers: {
-              'content-type': 'application/json'
-            },
-        });
+export const useRemoveSpendingProfile = () => {
+    const { mutate } = useMutation();
+    return {
+        mutate: ({ mutationArgs, feedbackOptions, mutationCallbacks }) => {
+            const { nameValue } = mutationArgs;
+            const payload = [
+                'removeSpendingProfile',
+                {
+                    graphqlArgs: {
+                        args: {
+                            name: { graphqlType : 'String!', value: nameValue },
+                        }
+                    },
+                    feedbackOptions
+                }
+            ];
 
-        return data.data;
-    } catch (error) {
-        throw error;
+            mutate(payload, mutationCallbacks);
+        }
     }
 }

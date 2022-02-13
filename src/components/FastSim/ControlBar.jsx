@@ -8,7 +8,7 @@ import {
 } from '@mui/material';
 import { PlayCircleFilledOutlined } from '@mui/icons-material';
 
-import HelpBubbleWrapper from '../InformationDisplay/HelpBubbleWrapper.jsx';
+import HelpBubbleWrapper from '../Feedback/HelpBubbleWrapper.jsx';
 import { fieldInfo } from './utils.js';
 
 

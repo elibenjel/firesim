@@ -1,4 +1,5 @@
 const { DataSource } = require('apollo-datasource');
+const { ApolloError } = require('apollo-server-errors');
 const { UserRoles } = require('../enums');
 
 class SimulationAPI extends DataSource {
@@ -34,8 +35,7 @@ class SimulationAPI extends DataSource {
 
         if (found !== -1) {
             if (!overwrite) {
-                console.log('Impossible to add a document with the same name as an existing one when both are owned by the same user');
-                return;
+                throw new ApolloError('Impossible to add a document with the same name as an existing one when both are owned by the same user', 'SPENDING_PROFILE_ALREADY_EXISTS');
             } else {
                 userDocument.spendingProfiles[found].name = name;
                 userDocument.spendingProfiles[found].spendings = spendings;
@@ -73,8 +73,7 @@ class SimulationAPI extends DataSource {
         }
 
         if (found === -1) {
-            console.log(`Cannot remove spending profile ${name} of user ${userDocument.email} as it doesn't exist`);
-            return false;
+            throw new ApolloError(`Cannot remove spending profile ${name} of user ${userDocument.email} as it doesn't exist`, 'NO_CORRESPONDING_SPENDING_PROFILE');
         }
         
         userDocument.spendingProfiles[found].remove();

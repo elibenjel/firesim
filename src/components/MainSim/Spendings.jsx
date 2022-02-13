@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
-import { useMutation, useQuery, useQueryClient } from 'react-query';
+import { useQueryClient } from 'react-query';
 import { useTranslation } from "react-i18next";
 import { useTheme } from '@mui/material/styles';
 import {
@@ -10,14 +10,9 @@ import {
     TextField,
     Typography,
     Tooltip,
-    Checkbox,
     InputAdornment,
-    Divider,
     Grid,
     MenuItem,
-    Snackbar,
-    Alert,
-    Slide
 } from '@mui/material';
 import {
     Edit,
@@ -27,14 +22,13 @@ import {
     Add,
     Visibility,
     VisibilityOff,
-    Check,
     VisibilityOutlined
 } from '@mui/icons-material';
 
-import ValidatorWrapper from "../InformationDisplay/ValidatorWrapper.jsx";
+import ValidatorWrapper from "../Feedback/ValidatorWrapper.jsx";
 import {
-    fetchRequestedProfile, fetchMySpendingProfileNames,
-    saveSpendingProfile, removeSpendingProfile
+    useFetchSpendingProfile, useFetchMySpendingProfileNames,
+    useCreateSpendingProfile, useOverwriteSpendingProfile, useRemoveSpendingProfile
 } from '../../services/simulation.js';
 import * as functions from '../../utils/functions';
 
@@ -45,8 +39,6 @@ const lineColumns = 8;
 const controlColumns = 3;
 const remainingColumns = totalColumns - lineColumns - controlColumns;
 const centeredInCell = { display : 'flex', alignItems : 'center', justifyContent : 'center' };
-const hcenterInCell = { display : 'flex', alignItems : 'center' };
-const vcenterInCell = { display : 'flex', justifyContent : 'center' };
 
 const ControlButton = (props) => {
     const { title='', onClick, icon, hidden, ...other } = props;
@@ -109,7 +101,6 @@ const LineController = (props) => {
     const { tradHook : t,
         lineIsLocked, setLineIsLocked, lineIsDeactivated, setLineIsDeactivated,
         lineIsTemp, lineIsValid, setUndo, removeLine } = props;
-    // const { tradHook : t, lock, setLockUtility, lockState, setNewLockState, backToLockState, validContent, removeSelf } = props;
 
     const handleModify = () => {
         setLineIsLocked(false);
@@ -389,7 +380,7 @@ const AddLineButton = (props) => {
 }
 
 const SpendingsPanel = (props) => {
-    const { tradHook : t, initial = [], trackProfile, ...other } = props;
+    const { tradHook : t, initial = [], trackProfile, setIsAnyLineUnlocked, ...other } = props;
     
     // the line states that cause visual modifications
     const [linesStates, setLinesStates] = useState(() => initial.map(item => (
@@ -399,6 +390,17 @@ const SpendingsPanel = (props) => {
             total: 0,
         }
     )));
+
+    // notify the parent about any unlocked line
+    let doIHaveUnlockedLines = false;
+    for (const line of linesStates) {
+        if (!line.locked) {
+            doIHaveUnlockedLines = true;
+            break;
+        }
+    }
+
+    useEffect(() => setIsAnyLineUnlocked(doIHaveUnlockedLines), [doIHaveUnlockedLines]);
 
     // keep track of the number of created lines, and use it for the prop key of each new line
     const createdLines = useRef(initial.length);
@@ -620,25 +622,43 @@ const SpendingsPanel = (props) => {
 const MainController = (props) => {
     const {
         tradHook : t,
-        handleCreate, handleLoad, handleOverwrite, handleRemove,
-        myProfileNames, requestedProfile
+        handleCreate, handleLoad, handleOverwrite, handleRemove, requestedProfile, isAnyLineUnlocked
     } = props;
 
     const [profileName, setProfileName] = useState('');
-    const [selectedProfile, setSelectedProfile] = useState('')
+    const [selectedProfile, setSelectedProfile] = useState('');
+
+    const queryClient = useQueryClient();
+    const {
+        myQueryKey: myProfileNamesQueryKey,
+        data: myProfileNames,
+        refetch: refetchMyProfileNames
+    } = useFetchMySpendingProfileNames();
+
+    useEffect(() => {
+        refetchMyProfileNames();
+    }, []);
 
     const handleProfileNameChange = (event) => {
         setProfileName(event.target.value);
     }
     
     const handleCreateClick = (event) => {
-        handleCreate(profileName);
-        setSelectedProfile(profileName);
+        const onCreateSuccess = () => {
+            queryClient.setQueryData(myProfileNamesQueryKey, (current => {
+                if (current.data.includes(profileName)) return current;
+                return {
+                    ...current,
+                    data: [ ...current.data, profileName ]
+                }
+            }));
+            setSelectedProfile(profileName);
+        }
+        handleCreate(profileName, { onSuccess: onCreateSuccess });
     }
 
     const handleSelectedProfileChange = (event) => {
         setSelectedProfile(event.target.value);
-        // selectedProfileRef.current = event.target.value;
     }
 
     const handleLoadClick = (event) => {
@@ -650,12 +670,16 @@ const MainController = (props) => {
     }
 
     const handleRemoveClick = (event) => {
-        handleRemove(selectedProfile);
-        if (selectedProfile !== requestedProfile) {
-            setSelectedProfile(requestedProfile);
-        } else {
-            setSelectedProfile('');
+        const onRemoveSuccess = () => {
+            queryClient.setQueryData(myProfileNamesQueryKey, (current => {
+                return {
+                    ...current,
+                    data: current.data.filter(item => item !== selectedProfile)
+                }
+            }));
+            (selectedProfile !== requestedProfile) ? setSelectedProfile(requestedProfile) : setSelectedProfile('');
         }
+        handleRemove(selectedProfile, { onSuccess : onRemoveSuccess });
     }
     
     const fieldProps = {
@@ -678,7 +702,7 @@ const MainController = (props) => {
                 <TextField {...fieldProps} onChange={handleProfileNameChange} />
                 <Button variant='contained' color='primary'
                     onClick={handleCreateClick}
-                    disabled={profileName.length === 0}
+                    disabled={isAnyLineUnlocked || profileName.length === 0}
                     sx={{ ml : 1 }}>{t('create')}</Button>
                 <TextField select {...selectProps} onChange={handleSelectedProfileChange}
                     children={
@@ -694,7 +718,7 @@ const MainController = (props) => {
                     sx={{ ml : 1 }}>{t('load')}</Button>
                 <Button variant='contained' color='primary'
                     onClick={handleOverwriteClick}
-                    disabled={selectedProfile.length === 0}
+                    disabled={isAnyLineUnlocked || selectedProfile.length === 0}
                     sx={{ ml : 1 }}>{t('overwrite')}</Button>
                 <Button variant='contained' color='primary'
                     onClick={handleRemoveClick}
@@ -706,26 +730,24 @@ const MainController = (props) => {
 
 const initialSpendings = [
     {
-        // myKey: null,
-        defaultName: null,
-        defaultNameF: t => t('housing'),
-        defaultAmount: 400,
-        defaultTPY: 12
+        label: null,
+        labelF: t => t('housing'),
+        amount: 400,
+        frequency: 12
     },
     {
-        // myKey: null,
-        defaultName: null,
-        defaultNameF: t => t('food'),
-        defaultAmount: 200,
-        defaultTPY: 12
+        label: null,
+        labelF: t => t('food'),
+        amount: 200,
+        frequency: 12
     }
 ];
 
 const Spendings = (props) => {
     const { t } = useTranslation('MainSim');
-    const [makeFeedback, setMakeFeedback] = useState(false);
-    const feedback = useRef('');
-    const feedbackSeverity = useRef('success');
+    const queryKeys = useRef({});
+    const spendingsContentKey = useRef(0);
+    const [isAnyLineUnlocked, setIsAnyLineUnlocked] = useState(false);
     const [requestedProfile, setRequestedProfile] = useState('');
     const spendingProfile = useRef({ spendings : [], total : 0 });
     const disableFetchProfileQuery = useRef(false);
@@ -733,130 +755,98 @@ const Spendings = (props) => {
     const queryClient = useQueryClient();
     
     initialSpendings.forEach((item) => {
-        if (item.defaultNameF) {
-            item.defaultName = item.defaultNameF(t);
-            // item.myKey = item.defaultNameF(t);
-            delete item.defaultNameF;
+        if (item.labelF) {
+            item.label = item.labelF(t);
+            delete item.labelF;
         }
     });
 
-    const handleError = ({ info, disableFeedback } = {}) => (err) => {
-        const fb = info ? `${info}\n${err}` : err;
-        feedback.current = fb;
-        feedbackSeverity.current = 'error';
-        !disableFeedback && setMakeFeedback(true);
+    const {
+        myQueryKey, data: fetchedProfile, dataUpdatedAt: loadedNewSpendingProfileAt,
+        refetch: refetchRequestedProfile, isSuccess
+    } = useFetchSpendingProfile({
+        queryArgs: { requestedProfile, initialSpendings, spendingsContentKey: spendingsContentKey.current },
+        queryOptions: { enabled : !disableFetchProfileQuery.current },
+        feedbackOptions: { replace : t('load-success') },
+        queryClient,
+        queryCallbacks: {
+            onSuccess: () => {
+                disableFetchProfileQuery.current = true;
+                spendingsContentKey.current += 1;
+            }
+        }
+    });
+
+    // if (isSuccess) {
+    //     spendingsContentKey.current += 1;
+    // }
+    if (requestedProfile !== '') {
+        queryKeys.current[requestedProfile] = myQueryKey;
     }
 
-    const handleSuccess = ({ info, disableFeedback, callback = () => null } = {}) => (data) => {
-        const errors = data?.errors;
-        if (errors) {
-            const msg = errors.reduce((payload, curr) => `${payload}\n${curr.message}`, '');
-            feedback.current = `Request failed:\n${msg}`;
-            feedbackSeverity.current = 'warning';
-        } else if (info) {
-            feedback.current = info;
-            feedbackSeverity.current = 'success';
+    const { mutate : createSpendingProfile } = useCreateSpendingProfile();
+    const { mutate : overwriteSpendingProfile } = useOverwriteSpendingProfile();
+    const { mutate : removeSpendingProfile } = useRemoveSpendingProfile();
+
+    const handleCreate = (name, { onSuccess }) => {
+        const onCreateSuccess = () => {
+            onSuccess();
+            setRequestedProfile(name);
         }
+        createSpendingProfile({
+            mutationArgs: {
+                nameValue: name,
+                spendingsValue: spendingProfile.current.spendings,
+                totalValue: spendingProfile.current.total
+            },
+            feedbackOptions: { onSuccess: { replace : t('create-success') } },
+            mutationCallbacks: { onSuccess: onCreateSuccess }
+        });
 
-        !disableFeedback && setMakeFeedback(true);
-        callback(data);
-    }
-
-    const { data : myProfileNames, refetch : refetchProfileNames } = useQuery(
-        'mySpendingProfileNames',
-        fetchMySpendingProfileNames,
-        {
-            refetchOnMount: false, refetchOnWindowFocus: false, refetchOnReconnect: false,
-            keepPreviousData: true,
-            onError : handleError(), onSuccess : handleSuccess({ disableFeedback : true })
-        }
-    );
-
-    useEffect(() => {
-        refetchProfileNames();
-    }, []);
-
-    const { data : fetchedProfile, dataUpdatedAt, refetch : refetchRequestedProfile } = useQuery(
-        ['fetchedProfile', { name : requestedProfile }],
-        fetchRequestedProfile,
-        {
-            enabled: !disableFetchProfileQuery.current,
-            refetchOnMount: false, refetchOnWindowFocus: false, refetchOnReconnect: false,
-            keepPreviousData: true, initialData: initialSpendings,
-            onError : handleError(),
-            onSuccess : handleSuccess({ info : t('load-success') })
-        }
-    );
-
-    const {
-        mutate: create,
-        isError: createIsErr,
-        error: createErr
-    } = useMutation(saveSpendingProfile, { onSuccess : handleSuccess({ info : t('create-success'), callback : () => queryClient.invalidateQueries('mySpendingProfileNames') }), onError : handleError() });
-
-    const {
-        mutate: overwrite,
-        isError: overwriteIsErr,
-        error: overwriteErr
-    } = useMutation(saveSpendingProfile, { onSuccess : handleSuccess({ info : t('overwrite-success') }), onError : handleError() });
-
-    const {
-        mutate: remove,
-        isError: removeIsErr,
-        error: removeErr
-    } = useMutation(removeSpendingProfile, { onSuccess : handleSuccess({ info : t('remove-success'), callback : () => queryClient.invalidateQueries('mySpendingProfileNames') }), onError : handleError() });
-
-
-    const handleCreate = (name) => {
-        const payload = {
-            name,
-            spendings: spendingProfile.current.spendings.reduce((prev, curr) => {
-                const { currentName : label, currentAmount : amount, currentTPY : frequency } = curr;
-                return [...prev, { label, amount, frequency }]
-            }, []),
-            total: spendingProfile.current.total
-        };
-
-        create(payload);
-        setRequestedProfile(name);
-        disableFetchProfileQuery.current = true;
     };
 
     const handleLoad = (name) => {
         disableFetchProfileQuery.current = false;
         setRequestedProfile((curr) => {
+            // force refetch for the snackbar to show
             if (name === curr) refetchRequestedProfile();
             return name
         });
     }
 
     const handleOverwrite = (name) => {
-        const payload = {
-            name,
-            spendings: spendingProfile.current.spendings.reduce((prev, curr) => {
-                const { currentName : label, currentAmount : amount, currentTPY : frequency } = curr;
-                return [...prev, { label, amount, frequency }]
-            }, []),
-            total: spendingProfile.current.total,
-            overwrite: true
-        };
-
-        overwrite(payload);
+        overwriteSpendingProfile({
+            mutationArgs: {
+                nameValue: name,
+                spendingsValue: spendingProfile.current.spendings,
+                totalValue: spendingProfile.current.total
+            },
+            feedbackOptions: { onSuccess: { replace : t('overwrite-success') } }
+        });
     }
 
-    const handleRemove = (name) => {
-        const payload = { name };
-        remove(payload);
-    }
-
-    const onSnackbarClose = () => {
-        setMakeFeedback(false);
+    const handleRemove = (name, { onSuccess }) => {
+        // disableFetchProfileQuery.current = true;
+        const onRemoveSuccess = () => {
+            onSuccess();
+            setRequestedProfile((curr) => {
+                return (!fetchedProfile.name || name === fetchedProfile.name) ? '' : fetchedProfile.name;
+            });
+            if (queryKeys.current[name]) {
+                queryClient.resetQueries(queryKeys.current[name]);
+                delete queryKeys.current[name]
+            }
+        }
+        removeSpendingProfile({
+            mutationArgs: { nameValue: name },
+            feedbackOptions: { onSuccess: { replace : t('remove-success') } },
+            mutationCallbacks: { onSuccess: onRemoveSuccess }
+        });
     }
 
     const mainControllerProps = {
         tradHook: t,
-        handleCreate, handleLoad, handleOverwrite, handleRemove,
-        myProfileNames, requestedProfile
+        handleCreate, handleLoad, handleOverwrite, handleRemove, requestedProfile, isAnyLineUnlocked
     }
 
     const trackProfile = ({ spendings, total }) => {
@@ -865,10 +855,8 @@ const Spendings = (props) => {
     }
 
     const spendingsPanelProps = {
-        tradHook: t, trackProfile, initial: fetchedProfile
+        tradHook: t, trackProfile, initial: fetchedProfile, setIsAnyLineUnlocked
     }
-
-    console.log('rendered')
 
     return (
         <Box sx={{
@@ -877,89 +865,10 @@ const Spendings = (props) => {
             p: 1, m: 1,
             width: '99%'
         }}>
-            <Snackbar open={makeFeedback} autoHideDuration={5000}
-                anchorOrigin={{ vertical : 'bottom', horizontal : 'center' }}
-                TransitionComponent={Slide}
-                onClose={onSnackbarClose} >
-                <Alert onClose={onSnackbarClose} severity={feedbackSeverity.current} sx={{ width: '100%' }}>
-                    {feedback.current}
-                </Alert>
-            </Snackbar>
             <MainController {...mainControllerProps} />
-            <SpendingsPanel key={dataUpdatedAt} {...spendingsPanelProps} />
+            <SpendingsPanel key={spendingsContentKey.current} {...spendingsPanelProps} />
         </Box>
     )
 }
-
-// const names = ['test', 'maisoui', 'a'];
-// const Spendings = (props) => {
-//     const selectedProfileRef = useRef('test');
-//     const [selectedProfile, setSelectedProfile] = useState('test');
-//     const runQuery = useRef(false);
-//     const onSuccessData = useRef(null);
-//     const counter = useRef(0);
-//     counter.current += 1;
-//     const history = useRef([]);
-//     const { isLoading, isFetching, isIdle, isStale, isSuccess, data, refetch : refetchProfile } = useQuery(
-//         ['requestedProfile', { name: selectedProfile }],
-//         fetchRequestedProfile,
-//         // { cacheTime : 5, staleTime: 10 }
-//         {
-//             refetchOnMount: false, refetchOnWindowFocus: false, refetchOnReconnect: false,
-//             keepPreviousData: true,
-//             initialData: initialSpendings,
-//             onSuccess: (res) => {
-//                 onSuccessData.current = res;
-//                 runQuery.current = false;
-//                 console.log('res : ', res)
-//             },
-//         }
-//     );
-
-//     // const { isLoading, isFetching, isIdle, isStale, data : requestedProfile, dataUpdatedAt, isSuccess, refetch : refetchProfileNames } = useQuery(
-//     //     ['other'],
-//     //     fetchMySpendingProfileNames,
-//     //     { cacheTime : 0, staleTime: 10 }
-//         // { initialData: initialSpendings }
-//     // );
-
-//     // useEffect(() => {
-//     //     const currIndex = names.indexOf(selectedProfileRef.current);
-//     //     selectedProfileRef.current = names.at((currIndex+1)%3);
-//     // });
-//     history.current.push({
-//         requesting : selectedProfile,
-//             success: JSON.stringify(isSuccess), loading : JSON.stringify(isLoading),  fetching : JSON.stringify(isFetching),  idle : JSON.stringify(isIdle), stale: JSON.stringify(isStale),
-//             data: JSON.stringify(data),
-//             rendering : counter.current,
-//     })
-
-//     const handleClick = () => {
-//         const currIndex = names.indexOf(selectedProfile);
-//         setSelectedProfile(names.at((currIndex+1)%3));
-//         runQuery.current = true;
-//         // refetchProfile();
-//     }
-
-//     return (
-//         <Box display='flex' >
-//             <Box display='flex' flexDirection='column' m={4} >
-//                 {
-//                     history.current.map((item, index) => (
-//                         <Box display='flex' flexDirection='column' key={index}>
-//                             <div>rendering count : {item.rendering}</div>
-//                             <div>requesting : {item.requesting}</div>
-//                             <div>success : {item.success} | loading : {item.loading} | fetching : {item.fetching} | idle : {item.idle} | stale : {item.stale}</div>
-//                             <div>{item.data}</div>
-//                             <div>-------------------------</div>
-//                             <div>-------------------------</div>
-//                         </Box>
-//                     ))
-//                 }
-//             </Box>
-//             <Button variant='contained' onClick={handleClick} children='refetch' size='small' sx={{maxHeight:'100px'}} />
-//         </Box>
-//     )
-// }
 
 export default Spendings;

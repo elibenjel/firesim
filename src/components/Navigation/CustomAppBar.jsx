@@ -60,7 +60,7 @@ const CustomAppBar = (props) => {
     };
 
     const handleClose = (lng) => {
-        setLanguage(lng);
+        lng && setLanguage(lng);
         setAnchorEl(null);
     };
 
@@ -131,7 +131,7 @@ const CustomAppBar = (props) => {
                         horizontal: 'right',
                     }}
                     open={!!anchorEl}
-                    onClose={handleClose}
+                    onClose={() => handleClose()}
                 >
                     <MenuItem onClick={() => handleClose('fr')}>Français</MenuItem>
                     <MenuItem onClick={() => handleClose('en')}>English</MenuItem>
