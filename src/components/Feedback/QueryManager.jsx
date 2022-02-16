@@ -71,7 +71,7 @@ const getdefaultRQFn = (isMutation) => async (obj) => {
 const defaultQueryFn = getdefaultRQFn(false);
 const defaultMutationFn = getdefaultRQFn(true);
 
-const NetworkFeedback = (props) => {
+const QueryManager = (props) => {
     const { queryClient } = props;
     const [makeFeedback, setMakeFeedback] = useState(false);
     const feedback = useRef('');
@@ -139,4 +139,4 @@ const NetworkFeedback = (props) => {
     )
 }
 
-export default NetworkFeedback;
+export default QueryManager;

@@ -18,15 +18,15 @@ class SimulationAPI extends DataSource {
         this.context = config.context;
     }
 
-    async saveSpendingProfile({ overwrite, ...spendingProfileInfo }) {
+    async saveSpendingsProfile({ overwrite, ...spendingsProfileInfo }) {
         const userDocument = this.context.user.document;
-        const { name, spendings, total } = spendingProfileInfo;
+        const { name, spendings, total } = spendingsProfileInfo;
 
         // returns the whole document: the user and the found subdocument (first user that have a subdocument)
-        // const found = await this.models.User.findOne({ 'spendingProfiles.name' : name }).exec();
+        // const found = await this.models.User.findOne({ 'spendingsProfiles.name' : name }).exec();
         let found = -1;
-        for (const index in userDocument.spendingProfiles) {
-            const currName = userDocument.spendingProfiles[index].name;
+        for (const index in userDocument.spendingsProfiles) {
+            const currName = userDocument.spendingsProfiles[index].name;
             if (currName === name) {
                 found = index;
                 break;
@@ -37,35 +37,36 @@ class SimulationAPI extends DataSource {
             if (!overwrite) {
                 throw new ApolloError('Impossible to add a document with the same name as an existing one when both are owned by the same user', 'SPENDING_PROFILE_ALREADY_EXISTS');
             } else {
-                userDocument.spendingProfiles[found].name = name;
-                userDocument.spendingProfiles[found].spendings = spendings;
-                userDocument.spendingProfiles[found].total = total;
+                userDocument.spendingsProfiles[found].name = name;
+                userDocument.spendingsProfiles[found].spendings = spendings;
+                userDocument.spendingsProfiles[found].total = total;
                 await userDocument.save();
                 console.log(`Modified spending profile ${name} of user ${userDocument.email}`);
-                return userDocument.spendingProfiles[found]._id;
+                return userDocument.spendingsProfiles[found]._id;
             }
         } else {
-            const spendingProfile = new this.models.SpendingProfile({
+            const spendingsProfile = {
                 name,
                 spendings,
                 total
-            });
+            };
     
-            userDocument.spendingProfiles.push(spendingProfile);
+            userDocument.spendingsProfiles.push(spendingsProfile);
             await userDocument.save();
-            console.log(`Saved new spending profile of user ${userDocument.email}:\n name: ${name}\n ID: ${spendingProfile._id}`);
-            return spendingProfile._id;
+            const spendingsProfileID = userDocument.spendingsProfiles.at(-1)._id;
+            console.log(`Saved new spending profile of user ${userDocument.email}:\n name: ${name}\n ID: ${spendingsProfileID}`);
+            return spendingsProfileID;
         }
     }
 
-    async removeSpendingProfile({ name }) {
+    async removeSpendingsProfile({ name }) {
         const userDocument = this.context.user.document;
 
         // returns the whole document: the user and the found subdocument (first user that have a subdocument)
-        // const found = await this.models.User.findOne({ 'spendingProfiles.name' : name }).exec();
+        // const found = await this.models.User.findOne({ 'spendingsProfiles.name' : name }).exec();
         let found = -1;
-        for (const index in userDocument.spendingProfiles) {
-            const currName = userDocument.spendingProfiles[index].name;
+        for (const index in userDocument.spendingsProfiles) {
+            const currName = userDocument.spendingsProfiles[index].name;
             if (currName === name) {
                 found = index;
                 break;
@@ -76,24 +77,24 @@ class SimulationAPI extends DataSource {
             throw new ApolloError(`Cannot remove spending profile ${name} of user ${userDocument.email} as it doesn't exist`, 'NO_CORRESPONDING_SPENDING_PROFILE');
         }
         
-        userDocument.spendingProfiles[found].remove();
+        userDocument.spendingsProfiles[found].remove();
         await userDocument.save();
         console.log(`Removed spending profile ${name} of user ${userDocument.email}`);
         return true;
     }
 
-    async getSpendingProfile({ name }) {
+    async getSpendingsProfile({ name }) {
         const userDocument = this.context.user.document;
-        for (const item of userDocument.spendingProfiles) {
+        for (const item of userDocument.spendingsProfiles) {
             if (item.name === name) {
                 return item;
             }
         }
     }
 
-    async getMySpendingProfileNames() {
+    async getMySpendingsProfileNames() {
         const userDocument = this.context.user.document;
-        return userDocument.spendingProfiles.map(item => item.name);
+        return userDocument.spendingsProfiles.map(item => item.name);
     }
 }
 

@@ -1,18 +1,11 @@
 import React, { useEffect, useState, useRef } from "react";
-import { useQueryClient } from 'react-query';
 import { useTranslation } from "react-i18next";
 import { useTheme } from '@mui/material/styles';
 import {
-    Box,
     Paper,
-    Button,
-    IconButton,
-    TextField,
     Typography,
-    Tooltip,
     InputAdornment,
     Grid,
-    MenuItem,
 } from '@mui/material';
 import {
     Edit,
@@ -26,13 +19,14 @@ import {
 } from '@mui/icons-material';
 
 import ValidatorWrapper from "../Feedback/ValidatorWrapper.jsx";
-import {
-    useFetchSpendingProfile, useFetchMySpendingProfileNames,
-    useCreateSpendingProfile, useOverwriteSpendingProfile, useRemoveSpendingProfile
-} from '../../services/simulation.js';
+import ProfileManager from './ProfileManager.jsx';
+import ControlButton from "./ControlButton.jsx";
+import LockableTextField from "./LockableTextField.jsx";
+import { manageSpendings } from '../../services/simulation.js';
 import * as functions from '../../utils/functions';
+import { t as tradF } from "i18next";
 
-
+const t = (arg) => tradF(arg, { ns : 'MainSim' });
 const tempKey = -1;
 const totalColumns = 12;
 const lineColumns = 8;
@@ -40,20 +34,6 @@ const controlColumns = 3;
 const remainingColumns = totalColumns - lineColumns - controlColumns;
 const centeredInCell = { display : 'flex', alignItems : 'center', justifyContent : 'center' };
 
-const ControlButton = (props) => {
-    const { title='', onClick, icon, hidden, ...other } = props;
-    return (
-        <Box sx={{ visibility : hidden ? 'hidden' : 'visible' }}>
-            <Tooltip title={title} >
-                <span>
-                    <IconButton id={`${title}-button`} onClick={onClick} {...other} >
-                        {icon}
-                    </IconButton>
-                </span>
-            </Tooltip>
-        </Box>
-    )
-}
 
 const CheckVisible = (props) => {
     const { title, checkedTitle, checked, indeterminate, ...other } = props;
@@ -121,7 +101,6 @@ const LineController = (props) => {
     const handleDeactivate = setLineIsDeactivated;
 
     return (
-        // <Paper elevation={1} >Control</Paper>
         <Grid container columns={controlColumns} {...centeredInCell} textAlign='center' >
             {lineIsLocked ?
             <>
@@ -309,51 +288,32 @@ const SpendingsLine = (props) => {
         }
     };
 
-    const fieldProps = (baseID, value, InputProps = {}, sx = {}) => (locked ?
-        {
-            id: `${baseID}-input`, variant: 'standard',
-            size: 'small', value,
-            sx: { ml : 1, mr : 1, ...sx },
-            InputProps: { readOnly : true, sx: {'::after': {
-                borderColor: (theme) => theme.palette.success.main
-            }}, ...InputProps },
-        }
-        :
-        {
-            id: `${baseID}-input`, variant: 'standard', label: t(`${baseID}-label`),
-            size: 'small', value,
-            sx: { ml : 1, mr : 1, ...sx },
-            InputProps: { sx: { '::after': {
-                borderColor: (theme) => theme.palette.secondary.dark
-            }}, ...InputProps },
-            InputLabelProps: { sx: { '&.Mui-focused': {
-                color: (theme) => theme.palette.secondary.dark
-            }}}
-        }
-    );
+    const itemProps = { locked, sx : { ml : 1, mr : 1 } }
 
     return (
-            <Grid container component={Paper} p={1} elevation={locked ? 0 : 1 } sx={{
-                backgroundColor: (theme) => locked ? (myIndex % 2 ? 'rgb(230,230,230)' : 'rgba(0,0,0,0)') : theme.palette.background.paper,
-                opacity: (locked && deactivated) ? '20%' : '100%'
-            }}>
-                <Grid item xs component={TextField} {...fieldProps('name', name,
-                    { endAdornment: <InputAdornment position='end'>:</InputAdornment> })}
-                    onChange={handleNameChange} onBlur={handleNameBlur} />
-                <Grid item xs component={TextField} {...fieldProps('amount', amount,
-                    { startAdornment: <InputAdornment position='start'>{t('currency')}</InputAdornment> })}
-                    inputProps={{ step : 50, min : 0, type : 'number' }}
-                    onChange={handleAmountChange} onBlur={handleAmountBlur} />
-                <Grid item xs component={TextField} {...fieldProps('tpy', timesPerYear,
-                    { startAdornment: <InputAdornment position='start'>x</InputAdornment> },
-                    { display : noPeriodic ? 'none' : null })}
-                    inputProps={{ step : 1, min : 1, type : 'number' }}
-                    onChange={handleTPYChange} onBlur={handleTPYBlur} />
-                <Grid item xs component={TextField} {...fieldProps('total', total.current, {
-                        startAdornment: <InputAdornment position='start'>=</InputAdornment>,
-                        disableUnderline: true
-                    }, { display : noPeriodic ? 'none' : null })} disabled />
-            </Grid>
+        <Grid container component={Paper} p={1} elevation={locked ? 0 : 1 } sx={{
+            backgroundColor: (theme) => locked ? (myIndex % 2 ? 'rgb(230,230,230)' : 'rgba(0,0,0,0)') : theme.palette.background.paper,
+            opacity: (locked && deactivated) ? '20%' : '100%'
+        }}>
+            <Grid item xs component={LockableTextField} {...itemProps}
+                baseID='name' value={name} label={t('name-label')}
+                InputProps={{ endAdornment: <InputAdornment position='end'>:</InputAdornment> }}
+                onChange={handleNameChange} onBlur={handleNameBlur} />
+            <Grid item xs component={LockableTextField} {...itemProps}
+                baseID='amount' value={amount} label={t('amount-label')} step={50} min={0}
+                InputProps={{ startAdornment: <InputAdornment position='start'>{t('currency')}</InputAdornment> }}
+                onChange={handleAmountChange} onBlur={handleAmountBlur} />
+            <Grid item xs component={LockableTextField} {...itemProps}
+                baseID='tpy' value={timesPerYear} label={t('tpy-label')} step={1} min={1}
+                InputProps={{ startAdornment : <InputAdornment position='start'>x</InputAdornment> }}
+                onChange={handleTPYChange} onBlur={handleTPYBlur} />
+            <Grid item xs component={LockableTextField} {...itemProps}
+                baseID='total' value={total.current} label={t('total-label')} disabled
+                InputProps={{
+                    startAdornment: <InputAdornment position='start'>=</InputAdornment>,
+                    disableUnderline: true
+                }} />
+        </Grid>
     )
 }
 
@@ -379,11 +339,11 @@ const AddLineButton = (props) => {
     )
 }
 
-const SpendingsPanel = (props) => {
-    const { tradHook : t, initial = [], trackProfile, setIsAnyLineUnlocked, ...other } = props;
+const SpendingsProfile = (props) => {
+    const { tradHook : t, initial, trackProfileData, setIsProfileLocked } = props;
     
     // the line states that cause visual modifications
-    const [linesStates, setLinesStates] = useState(() => initial.map(item => (
+    const [linesStates, setLinesStates] = useState(() => initial.spendings.map(item => (
         {
             locked: true,
             deactivated: false,
@@ -400,7 +360,7 @@ const SpendingsPanel = (props) => {
         }
     }
 
-    useEffect(() => setIsAnyLineUnlocked(doIHaveUnlockedLines), [doIHaveUnlockedLines]);
+    useEffect(() => setIsProfileLocked(!doIHaveUnlockedLines), [doIHaveUnlockedLines]);
 
     // keep track of the number of created lines, and use it for the prop key of each new line
     const createdLines = useRef(initial.length);
@@ -408,13 +368,15 @@ const SpendingsPanel = (props) => {
     const totalSpendings = useRef(0);
 
     // the remaining line state variables do not cause visual modifications
-    const linesRefs = useRef(initial.map((item, index) => (
+    const linesRefs = useRef(initial.spendings?.map((item, index) => (
         {
             myKey: index,
-            ...item, // myKey, defaultName, defaultAmount, defaultTPY
-            currentName: item.defaultName,
-            currentAmount: item.defaultAmount,
-            currentTPY: item.defaultTPY, // keep track of each line own state variables
+            defaultName: item.label,
+            currentName: item.label,
+            defaultAmount: item.amount,
+            currentAmount: item.amount,
+            defaultTPY: item.frequency,
+            currentTPY: item.frequency,
             outdated: false,
         }
     )));
@@ -526,13 +488,12 @@ const SpendingsPanel = (props) => {
     totalSpendings.current = linesStates.reduce((prev, curr) =>  prev + curr.total, 0);
 
     // Relay to parent the desired info about this spending profile
-    trackProfile({
-        spendings: linesRefs.current.reduce((prev, curr) => {
+    trackProfileData(linesRefs.current.reduce((prev, curr) => {
             const { currentName, currentAmount, currentTPY } = curr;
             return curr.myKey !== tempKey ? [...prev, { currentName, currentAmount, currentTPY }] : prev;
         }, []),
-        total: totalSpendings.current
-    });
+        totalSpendings.current
+    );
 
     const controlGroupProps = (index) => {
         const myProps = { ...linesStates[index], ...linesRefs.current[index] };
@@ -619,255 +580,44 @@ const SpendingsPanel = (props) => {
     )
 }
 
-const MainController = (props) => {
-    const {
-        tradHook : t,
-        handleCreate, handleLoad, handleOverwrite, handleRemove, requestedProfile, isAnyLineUnlocked
-    } = props;
-
-    const [profileName, setProfileName] = useState('');
-    const [selectedProfile, setSelectedProfile] = useState('');
-
-    const queryClient = useQueryClient();
-    const {
-        myQueryKey: myProfileNamesQueryKey,
-        data: myProfileNames,
-        refetch: refetchMyProfileNames
-    } = useFetchMySpendingProfileNames();
-
-    useEffect(() => {
-        refetchMyProfileNames();
-    }, []);
-
-    const handleProfileNameChange = (event) => {
-        setProfileName(event.target.value);
-    }
-    
-    const handleCreateClick = (event) => {
-        const onCreateSuccess = () => {
-            queryClient.setQueryData(myProfileNamesQueryKey, (current => {
-                if (current.data.includes(profileName)) return current;
-                return {
-                    ...current,
-                    data: [ ...current.data, profileName ]
-                }
-            }));
-            setSelectedProfile(profileName);
+const initialProfileData = {
+    spendings: [
+        {
+            label: t('housing'),
+            amount: 400,
+            frequency: 12
+        },
+        {
+            label: t('food'),
+            amount: 200,
+            frequency: 12
         }
-        handleCreate(profileName, { onSuccess: onCreateSuccess });
-    }
-
-    const handleSelectedProfileChange = (event) => {
-        setSelectedProfile(event.target.value);
-    }
-
-    const handleLoadClick = (event) => {
-        handleLoad(selectedProfile);
-    }
-
-    const handleOverwriteClick = (event) => {
-        handleOverwrite(selectedProfile);
-    }
-
-    const handleRemoveClick = (event) => {
-        const onRemoveSuccess = () => {
-            queryClient.setQueryData(myProfileNamesQueryKey, (current => {
-                return {
-                    ...current,
-                    data: current.data.filter(item => item !== selectedProfile)
-                }
-            }));
-            (selectedProfile !== requestedProfile) ? setSelectedProfile(requestedProfile) : setSelectedProfile('');
-        }
-        handleRemove(selectedProfile, { onSuccess : onRemoveSuccess });
-    }
-    
-    const fieldProps = {
-        id: `profile-name-input`, variant: 'filled',
-        label: t('create-label'), size: 'small', value: profileName,
-        color: 'success'
-    };
-
-    const selectProps = {
-        id: `profile-name-selector`, variant: 'filled', value: selectedProfile,
-        label: t('select-label'), size: 'small', color: 'success', sx: { minWidth: 300, ml: 15 }
-    }
-
-    return (
-        <Paper elevation={1} p={1} sx={{
-            alignSelf : 'flex-start',
-            display: 'flex', justifyContent: 'flex-start', alignItems: 'center',
-            p: 1
-            }} >
-                <TextField {...fieldProps} onChange={handleProfileNameChange} />
-                <Button variant='contained' color='primary'
-                    onClick={handleCreateClick}
-                    disabled={isAnyLineUnlocked || profileName.length === 0}
-                    sx={{ ml : 1 }}>{t('create')}</Button>
-                <TextField select {...selectProps} onChange={handleSelectedProfileChange}
-                    children={
-                        myProfileNames ?
-                        myProfileNames.map((item) => (
-                            <MenuItem key={item} value={item}>{item}</MenuItem>
-                        ))
-                        : <MenuItem key={''} value={''}>{''}</MenuItem>
-                }/>
-                <Button variant='contained' color='primary'
-                    onClick={handleLoadClick}
-                    disabled={selectedProfile.length === 0}
-                    sx={{ ml : 1 }}>{t('load')}</Button>
-                <Button variant='contained' color='primary'
-                    onClick={handleOverwriteClick}
-                    disabled={isAnyLineUnlocked || selectedProfile.length === 0}
-                    sx={{ ml : 1 }}>{t('overwrite')}</Button>
-                <Button variant='contained' color='primary'
-                    onClick={handleRemoveClick}
-                    disabled={selectedProfile.length === 0}
-                    sx={{ ml : 1 }}>{t('remove')}</Button>
-        </Paper>
-    )
-}
-
-const initialSpendings = [
-    {
-        label: null,
-        labelF: t => t('housing'),
-        amount: 400,
-        frequency: 12
-    },
-    {
-        label: null,
-        labelF: t => t('food'),
-        amount: 200,
-        frequency: 12
-    }
-];
+    ],
+    total: 12*400 + 12*200
+};
 
 const Spendings = (props) => {
-    const { t } = useTranslation('MainSim');
-    const queryKeys = useRef({});
-    const spendingsContentKey = useRef(0);
-    const [isAnyLineUnlocked, setIsAnyLineUnlocked] = useState(false);
-    const [requestedProfile, setRequestedProfile] = useState('');
-    const spendingProfile = useRef({ spendings : [], total : 0 });
-    const disableFetchProfileQuery = useRef(false);
 
-    const queryClient = useQueryClient();
-    
-    initialSpendings.forEach((item) => {
-        if (item.labelF) {
-            item.label = item.labelF(t);
-            delete item.labelF;
-        }
-    });
-
-    const {
-        myQueryKey, data: fetchedProfile, dataUpdatedAt: loadedNewSpendingProfileAt,
-        refetch: refetchRequestedProfile, isSuccess
-    } = useFetchSpendingProfile({
-        queryArgs: { requestedProfile, initialSpendings, spendingsContentKey: spendingsContentKey.current },
-        queryOptions: { enabled : !disableFetchProfileQuery.current },
-        feedbackOptions: { replace : t('load-success') },
-        queryClient,
-        queryCallbacks: {
-            onSuccess: () => {
-                disableFetchProfileQuery.current = true;
-                spendingsContentKey.current += 1;
-            }
-        }
-    });
-
-    // if (isSuccess) {
-    //     spendingsContentKey.current += 1;
-    // }
-    if (requestedProfile !== '') {
-        queryKeys.current[requestedProfile] = myQueryKey;
+    // used to track the modifications made to the profile
+    // each time SpendingsProfile does render, it updates correctly this ref using the tracking function
+    const profileData = useRef({});
+    const trackProfileData = (spendingsValue, totalValue) => {
+        profileData.current = { spendingsValue, totalValue };
     }
 
-    const { mutate : createSpendingProfile } = useCreateSpendingProfile();
-    const { mutate : overwriteSpendingProfile } = useOverwriteSpendingProfile();
-    const { mutate : removeSpendingProfile } = useRemoveSpendingProfile();
-
-    const handleCreate = (name, { onSuccess }) => {
-        const onCreateSuccess = () => {
-            onSuccess();
-            setRequestedProfile(name);
-        }
-        createSpendingProfile({
-            mutationArgs: {
-                nameValue: name,
-                spendingsValue: spendingProfile.current.spendings,
-                totalValue: spendingProfile.current.total
-            },
-            feedbackOptions: { onSuccess: { replace : t('create-success') } },
-            mutationCallbacks: { onSuccess: onCreateSuccess }
-        });
-
-    };
-
-    const handleLoad = (name) => {
-        disableFetchProfileQuery.current = false;
-        setRequestedProfile((curr) => {
-            // force refetch for the snackbar to show
-            if (name === curr) refetchRequestedProfile();
-            return name
-        });
-    }
-
-    const handleOverwrite = (name) => {
-        overwriteSpendingProfile({
-            mutationArgs: {
-                nameValue: name,
-                spendingsValue: spendingProfile.current.spendings,
-                totalValue: spendingProfile.current.total
-            },
-            feedbackOptions: { onSuccess: { replace : t('overwrite-success') } }
-        });
-    }
-
-    const handleRemove = (name, { onSuccess }) => {
-        // disableFetchProfileQuery.current = true;
-        const onRemoveSuccess = () => {
-            onSuccess();
-            setRequestedProfile((curr) => {
-                return (!fetchedProfile.name || name === fetchedProfile.name) ? '' : fetchedProfile.name;
-            });
-            if (queryKeys.current[name]) {
-                queryClient.resetQueries(queryKeys.current[name]);
-                delete queryKeys.current[name]
-            }
-        }
-        removeSpendingProfile({
-            mutationArgs: { nameValue: name },
-            feedbackOptions: { onSuccess: { replace : t('remove-success') } },
-            mutationCallbacks: { onSuccess: onRemoveSuccess }
-        });
-    }
-
-    const mainControllerProps = {
+    const profileManagerProps = {
         tradHook: t,
-        handleCreate, handleLoad, handleOverwrite, handleRemove, requestedProfile, isAnyLineUnlocked
-    }
-
-    const trackProfile = ({ spendings, total }) => {
-        spendingProfile.current.spendings = spendings;
-        spendingProfile.current.total = total;
-    }
-
-    const spendingsPanelProps = {
-        tradHook: t, trackProfile, initial: fetchedProfile, setIsAnyLineUnlocked
+        initialProfileData,
+        profileData,
+        managerFunctions: manageSpendings
     }
 
     return (
-        <Box sx={{
-            display: 'flex', flexDirection: 'column',
-            justifyContent: 'space-around', alignItems: 'center',
-            p: 1, m: 1,
-            width: '99%'
-        }}>
-            <MainController {...mainControllerProps} />
-            <SpendingsPanel key={spendingsContentKey.current} {...spendingsPanelProps} />
-        </Box>
+        <ProfileManager {...profileManagerProps} >
+            {
+                ({ key, props }) => <SpendingsProfile key={key} {...props} trackProfileData={trackProfileData} />
+            }
+        </ProfileManager>
     )
 }
 

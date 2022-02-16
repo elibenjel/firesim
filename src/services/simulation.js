@@ -1,28 +1,21 @@
+import { create } from '@mui/material/styles/createTransitions';
 import axios from 'axios';
 import { useMutation, useQuery } from 'react-query';
 
-
-export const useFetchSpendingProfile = ({ queryArgs, feedbackOptions, queryOptions, queryCallbacks, queryClient }) => {
-    const { requestedProfile, initialSpendings, spendingsContentKey } = queryArgs;
+const useFetchProfile = (queryName, dataSelection) => ({ queryArgs, feedbackOptions, queryOptions, queryCallbacks, queryClient }) => {
+    const { selectedProfileName, initialProfileData } = queryArgs;
     const { enabled } = queryOptions;
     const myQueryKey = [
-        'loadSpendingProfile',
+        queryName,
         {
             graphqlArgs: {
                 args: {
-                    name : { graphqlType: 'String!', value : requestedProfile}
+                    name : { graphqlType: 'String!', value : selectedProfileName }
                 },
-                selection: `{
-                    spendings {
-                        label,
-                        amount,
-                        frequency
-                    }
-                }`
+                selection: dataSelection
             },
             feedbackOptions
         },
-        spendingsContentKey
     ];
 
     const myQueryOptions = {
@@ -32,27 +25,17 @@ export const useFetchSpendingProfile = ({ queryArgs, feedbackOptions, queryOptio
         keepPreviousData: true, cacheTime: 0,
         initialData: {
             error: null,
-            data: {
-                spendings: initialSpendings
-            },
+            data: initialProfileData,
             feedback: ''
-        },
-        select: (res) => {
-            return queryClient.getDefaultOptions().queries.select(res).spendings.map(item => {
-                return {
-                    defaultName: item.label,
-                    defaultAmount: item.amount,
-                    defaultTPY: item.frequency
-                }
-            })
         }
     };
+
     return { myQueryKey, ...useQuery(myQueryKey, myQueryOptions) };
 }
 
-export const useFetchMySpendingProfileNames = () => {
+const useFetchMyProfileNames = (queryName) => () => {
     const myQueryKey = [
-        'mySpendingProfileNames',
+        queryName,
         {
             graphqlArgs : {},
             feedbackOptions : { disableOnSuccess : true }
@@ -65,81 +48,25 @@ export const useFetchMySpendingProfileNames = () => {
     return { myQueryKey, ...useQuery(myQueryKey, myQueryOptions) }
 }
 
-export const useCreateSpendingProfile = () => {
-    const { mutate } = useMutation();
-    return {
-        mutate: ({ mutationArgs, feedbackOptions, mutationCallbacks }) => {
-            const { nameValue, spendingsValue, totalValue } = mutationArgs;
-            const payload = [
-                'saveSpendingProfile',
-                {
-                    graphqlArgs: {
-                        args: {
-                            name: { graphqlType : 'String!', value: nameValue },
-                            spendings: {
-                                graphqlType: '[SpendingInput!]!',
-                                value: spendingsValue.reduce((prev, curr) => {
-                                    const { currentName : label, currentAmount : amount, currentTPY : frequency } = curr;
-                                    return [...prev, { label, amount, frequency }]
-                                }, [])
-                            },
-                            total: { graphqlType : 'Float!', value : totalValue },
-                            overwrite: { graphqlType : 'Boolean', value : false }
-                        }
-                    },
-                    feedbackOptions
-                }
-            ];
-
-            mutate(payload, mutationCallbacks);
-        }
+const useFetchSpendingsProfile = useFetchProfile('loadSpendingsProfile', `{
+    spendings {
+        label,
+        amount,
+        frequency
     }
-}
+}`);
 
-export const useOverwriteSpendingProfile = () => {
-    const { mutate } = useMutation();
-    return {
-        mutate: ({ mutationArgs, feedbackOptions }) => {
-            const { nameValue, spendingsValue, totalValue } = mutationArgs;
-            const payload = [
-                'saveSpendingProfile',
-                {
-                    graphqlArgs: {
-                        args: {
-                            name: { graphqlType : 'String!', value: nameValue },
-                            spendings: {
-                                graphqlType: '[SpendingInput!]!',
-                                value: spendingsValue.reduce((prev, curr) => {
-                                    const { currentName : label, currentAmount : amount, currentTPY : frequency } = curr;
-                                    return [...prev, { label, amount, frequency }]
-                                }, [])
-                            },
-                            total: { graphqlType : 'Float!', value : totalValue },
-                            overwrite: { graphqlType : 'Boolean', value : true }
-                        }
-                    },
-                    feedbackOptions
-                }
-            ];
-    
-            mutate(payload);
-        }
-    }
-}
+const useFetchMySpendingsProfileNames = useFetchMyProfileNames('mySpendingsProfileNames');
 
-export const useRemoveSpendingProfile = () => {
+const useRemoveProfile = (mutationName, createGraphqlArgs) => () => {
     const { mutate } = useMutation();
     return {
         mutate: ({ mutationArgs, feedbackOptions, mutationCallbacks }) => {
             const { nameValue } = mutationArgs;
             const payload = [
-                'removeSpendingProfile',
+                mutationName,
                 {
-                    graphqlArgs: {
-                        args: {
-                            name: { graphqlType : 'String!', value: nameValue },
-                        }
-                    },
+                    graphqlArgs: createGraphqlArgs(mutationArgs),
                     feedbackOptions
                 }
             ];
@@ -147,4 +74,70 @@ export const useRemoveSpendingProfile = () => {
             mutate(payload, mutationCallbacks);
         }
     }
+}
+
+const useSaveProfile = (mutationName, createGraphqlArgs) => (overwrite) => () => {
+    const { mutate } = useMutation();
+    return {
+        mutate: ({ mutationArgs, feedbackOptions, mutationCallbacks }) => {
+            const graphqlArgs = createGraphqlArgs(mutationArgs);
+            graphqlArgs.args.overwrite = { graphqlType : 'Boolean', value : overwrite };
+            const payload = [
+                mutationName,
+                {
+                    graphqlArgs,
+                    feedbackOptions
+                }
+            ];
+
+            mutate(payload, mutationCallbacks);
+        }
+    }
+}
+
+const useSaveSpendingsProfile = useSaveProfile('saveSpendingsProfile', (mutationArgs) => {
+    const { nameValue, spendingsValue, totalValue } = mutationArgs;
+    return {
+        args: {
+            name: { graphqlType : 'String!', value: nameValue },
+            spendings: {
+                graphqlType: '[SpendingInput!]!',
+                value: spendingsValue.reduce((prev, curr) => {
+                    const { currentName : label, currentAmount : amount, currentTPY : frequency } = curr;
+                    return [...prev, { label, amount, frequency }]
+                }, [])
+            },
+            total: { graphqlType : 'Float!', value : totalValue },
+            overwrite: { graphqlType : 'Boolean', value : false }
+        },
+        selection: undefined
+    }
+});
+
+const useCreateSpendingsProfile = useSaveSpendingsProfile(false);
+const useOverwriteSpendingsProfile = useSaveSpendingsProfile(true);
+const useRemoveSpendingsProfile = useRemoveProfile('removeSpendingsProfile', (mutationArgs) => {
+    const { nameValue } = mutationArgs;
+    return {
+        args: {
+            name: { graphqlType : 'String!', value: nameValue },
+        },
+        selection: undefined
+    }
+});
+
+export const manageSpendings = {
+    useFetchNames: useFetchMySpendingsProfileNames,
+    useFetchProfile: useFetchSpendingsProfile,
+    useCreateProfile: useCreateSpendingsProfile,
+    useOverwriteProfile: useOverwriteSpendingsProfile,
+    useRemoveProfile: useRemoveSpendingsProfile
+}
+
+export const manageIncome = {
+    useFetchNames: useFetchMySpendingsProfileNames,
+    useFetchProfile: useFetchSpendingsProfile,
+    useCreateProfile: useCreateSpendingsProfile,
+    useOverwriteProfile: useOverwriteSpendingsProfile,
+    useRemoveProfile: useRemoveSpendingsProfile
 }

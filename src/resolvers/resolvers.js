@@ -9,11 +9,11 @@ module.exports = {
             const users = dataSources.userAPI.getAllUsers();
             return users;
         },
-        mySpendingProfileNames: (_, __, { dataSources }) => {
-            const result = dataSources.simulationAPI.getMySpendingProfileNames();
+        mySpendingsProfileNames: (_, __, { dataSources }) => {
+            const result = dataSources.simulationAPI.getMySpendingsProfileNames();
             return result;
         },
-        loadSpendingProfile: (_, args, { dataSources }) => dataSources.simulationAPI.getSpendingProfile(args),
+        loadSpendingsProfile: (_, args, { dataSources }) => dataSources.simulationAPI.getSpendingsProfile(args),
     },
     Mutation: {
         login: async (_, args, { dataSources }) => {
@@ -24,12 +24,12 @@ module.exports = {
             const user = await dataSources.userAPI.signupUser(args);
             return user;
         },
-        saveSpendingProfile: async (_, args, { dataSources }) => {
-            const id = await dataSources.simulationAPI.saveSpendingProfile(args);
+        saveSpendingsProfile: async (_, args, { dataSources }) => {
+            const id = await dataSources.simulationAPI.saveSpendingsProfile(args);
             return id;
         },
-        removeSpendingProfile: async (_, args, { dataSources }) => {
-            const success = await dataSources.simulationAPI.removeSpendingProfile(args);
+        removeSpendingsProfile: async (_, args, { dataSources }) => {
+            const success = await dataSources.simulationAPI.removeSpendingsProfile(args);
             return success;
         }
     },

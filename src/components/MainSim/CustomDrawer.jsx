@@ -6,36 +6,10 @@ import { Box,
     Paper,
     IconButton
 } from '@mui/material/';
-import { Help, Savings, BarChart, DisplaySettings, ExpandLess, ExpandMore } from '@mui/icons-material';
+import { ExpandLess, ExpandMore } from '@mui/icons-material';
 
 import LinkTab from '../Navigation/LinkTab.jsx';
 
-const tabs = [
-    {
-        name: 'mainsim',
-        label: (t) => t('sim'),
-        to: '/mainsim',
-        icon: <DisplaySettings />
-    },
-    {
-        name: 'spendings',
-        label: (t) => t('spendings'),
-        to: '/mainsim/spendings',
-        icon: <Savings />
-    },
-    {
-        name: 'market',
-        label: (t) => t('market'),
-        to: '/mainsim/market',
-        icon: <BarChart />
-    },
-    {
-        name: 'howto',
-        label: (t) => t('howto'),
-        to: '/mainsim/howto',
-        icon: <Help />
-    },
-];
 
 const DrawerHandle = (props) => {
     const { drawerState, setDrawerState } = props;
@@ -67,7 +41,7 @@ const DrawerHandle = (props) => {
 }
 
 const CustomDrawer = (props) => {
-    const { selected, tradHook : t } = props;
+    const { tradHook : t, tabs, selected } = props;
 
     // pass this state to DrawerHandle to open and close the drawer
     const [open, setOpen] = useState(true);

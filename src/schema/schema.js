@@ -8,7 +8,7 @@ const typeDefs = gql`
         token: String
     }
 
-    type SpendingProfile {
+    type SpendingsProfile {
         name: String!
         spendings: [Spending!]!
         total: Float!
@@ -34,15 +34,15 @@ const typeDefs = gql`
     type Query {
         whoami(email: String!): User
         users: [User!]
-        mySpendingProfileNames: [String!]
-        loadSpendingProfile(name: String!): SpendingProfile
+        mySpendingsProfileNames: [String!]
+        loadSpendingsProfile(name: String!): SpendingsProfile
     }
 
     type Mutation {
         login(email: String!, password: String!): User
         signup(email: String!, password: String!): User
-        saveSpendingProfile(name: String!, spendings: [SpendingInput!]!, total: Float!, overwrite: Boolean): ID
-        removeSpendingProfile(name: String!): Boolean
+        saveSpendingsProfile(name: String!, spendings: [SpendingInput!]!, total: Float!, overwrite: Boolean): ID
+        removeSpendingsProfile(name: String!): Boolean
     }
 `;
 

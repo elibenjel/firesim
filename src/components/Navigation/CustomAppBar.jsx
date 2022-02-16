@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
-import { useTheme } from '@mui/material/styles';
 import {
     Box,
     Tabs,
@@ -13,36 +12,12 @@ import {
 import {
     Language,
     Whatshot,
-    TrendingUp,
-    Home,
-    Analytics
 } from '@mui/icons-material';
 
 import LinkTab from './LinkTab.jsx';
 
-const tabs = [
-    {
-        name: 'home',
-        label: (t) => t('tab1'),
-        to: '/home',
-        icon: <Home />
-    },
-    {
-        name: 'fastsim',
-        label: (t) => t('tab2'),
-        to: '/fastsim',
-        icon: <TrendingUp />
-    },
-    {
-        name: 'mainsim',
-        label: (t) => t('tab3'),
-        to: '/mainsim',
-        icon: <Analytics />
-    }
-];
-
 const CustomAppBar = (props) => {
-    const { selected, setLanguage } = props;
+    const { tabs, selected, setLanguage } = props;
     const { t } = useTranslation('Navigation');
     const [anchorEl, setAnchorEl] = useState(null);
     const location = useLocation();

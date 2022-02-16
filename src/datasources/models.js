@@ -2,7 +2,7 @@ const { UserRoles } = require('../enums');
 
 module.exports.getModels = (mg) => {
 
-    const spendingProfileSchema = new mg.Schema({
+    const spendingsProfileSchema = new mg.Schema({
         createdAt: { type : Date, default : Date.now },
         updatedAt: { type : Date, default : Date.now },
         name: { type : String, required : true },
@@ -18,11 +18,11 @@ module.exports.getModels = (mg) => {
         email: { type : String, required : true, unique : true},
         password: { type : String, required : true},
         roles: {type : [{type : String, enum : [...UserRoles]}], default : [UserRoles.USER]},
-        spendingProfiles: { type : [spendingProfileSchema], default : [] }
+        spendingsProfiles: { type : [spendingsProfileSchema], default : [] }
     });
   
     const User = mg.model('User', userSchema);
-    const SpendingProfile = mg.model('SpendingProfile', spendingProfileSchema);
+    // const SpendingsProfile = mg.model('SpendingsProfile', spendingsProfileSchema);
 
-    return { User, SpendingProfile };
+    return { User };
 }

@@ -6,7 +6,7 @@ import { CssBaseline } from '@mui/material';
 import { ThemeProvider } from '@mui/material/styles';
 
 import AppRouter from './Navigation/AppRouter.jsx';
-import NetworkFeedback from './Feedback/NetworkFeedback.jsx';
+import QueryManager from './Feedback/QueryManager.jsx';
 import i18next from 'i18next';
 import myTheme from '../utils/theme.js';
 
@@ -29,7 +29,7 @@ const App = () => {
         <QueryClientProvider client={queryClient} >
             <ThemeProvider theme={myTheme}>
             <CssBaseline enableColorScheme />
-            <NetworkFeedback queryClient={queryClient} />
+            <QueryManager queryClient={queryClient} />
             <AppRouter token={token} setLanguage={setLanguageUtility} />
             <ReactQueryDevtools initialIsOpen={false} position='bottom-right' />
             </ThemeProvider>

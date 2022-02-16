@@ -2,10 +2,13 @@ import React, { useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Route, Routes, useMatch } from 'react-router-dom';
 import { Box, Paper } from '@mui/material';
+import { Help, Savings, BarChart, DisplaySettings, Paid } from '@mui/icons-material';
 
 import CustomDrawer from '../components/MainSim/CustomDrawer.jsx';
 import Spendings from '../components/MainSim/Spendings.jsx';
+import Income from '../components/MainSim/Income.jsx';
 import ParameterField from '../components/FastSim/ParameterField.jsx';
+
 
 const Test = (props) => {
     const [v1, setV1] = useState(0);
@@ -23,6 +26,42 @@ const Test = (props) => {
     )
 }
 
+const tabs = [
+    {
+        name: 'mainsim',
+        label: (t) => t('sim'),
+        to: '/mainsim/',
+        icon: <DisplaySettings />,
+        element: <Test />
+    },
+    {
+        name: 'spendings',
+        label: (t) => t('spendings'),
+        to: '/mainsim/spendings',
+        icon: <Savings />,
+        element: <Spendings />
+    },
+    {
+        name: 'income',
+        label: (t) => t('income'),
+        to: '/mainsim/income',
+        icon: <Paid />,
+        element: <Income />
+    },
+    {
+        name: 'market',
+        label: (t) => t('market'),
+        to: '/mainsim/market',
+        icon: <BarChart />
+    },
+    {
+        name: 'howto',
+        label: (t) => t('howto'),
+        to: '/mainsim/howto',
+        icon: <Help />
+    },
+];
+
 const MainSim = (props) => {
     const { t : tradHook } = useTranslation('MainSim');
 
@@ -32,12 +71,14 @@ const MainSim = (props) => {
             alignItems: 'flex-start',
             width: '100%', height: '100%'
         }}>
-            <CustomDrawer tradHook={tradHook} />
+            <CustomDrawer tradHook={tradHook} tabs={tabs} />
             <Routes>
-                <Route path='' element={<Test />} />
-                <Route path='spendings' element={<Spendings />} />
-                <Route path='market' element={'market'} />
-                <Route path='howto' element={'howto'} />
+                {
+                    tabs.map(tab => {
+                        const relPath = tab.to.split('/').at(-1);
+                        return <Route key={relPath} path={relPath} element={tab.element || relPath} />
+                    })
+                }
             </Routes>
         </Box>
     );

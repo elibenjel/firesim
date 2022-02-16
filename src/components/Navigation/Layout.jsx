@@ -4,7 +4,7 @@ import CustomAppBar from './CustomAppBar.jsx';
 import { useLocation } from 'react-router-dom';
 
 const Layout = (props) => {
-    const { setLanguage, children } = props;
+    const { tabs, setLanguage, children } = props;
     const location = useLocation();
 
     return (
@@ -14,7 +14,7 @@ const Layout = (props) => {
             width: '99%', height: '100%',
             m: 'auto'
         }}>
-            {(location.pathname === '/') || <CustomAppBar setLanguage={setLanguage} />}
+            {(location.pathname === '/') || <CustomAppBar tabs={tabs} setLanguage={setLanguage} />}
             {children}
         </Box>
     );

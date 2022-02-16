@@ -1,8 +1,9 @@
 {
-    "howto": "Aide",
-    "spendings": "Profil de dépenses",
-    "market": "Evolution du marché",
-    "sim": "Simulateur",
+    "howto-tab": "Aide",
+    "spendings-tab": "Profil de dépenses",
+    "income-tab": "Profil de revenus",
+    "market-tab": "Evolution du marché",
+    "sim-tab": "Simulateur",
     "name-label": "Etiquette",
     "amount-label": "Montant",
     "tpy-label": "Fréquence par an",
@@ -30,5 +31,15 @@
     "load": "Charger",
     "load-success": "Chargement réussi !",
     "remove-success": "Profil supprimé !",
-    "select-label": "Sélectionner un profil existant"
+    "select-label": "Sélectionner un profil existant",
+    "income-line-1": "puis",
+    "income-line-2": "pendant",
+    "income-line-3": "an",
+    "income": "Revenu",
+    "increase": "Augmentation",
+    "average-f": "moyenne",
+    "annual-m": "annuel",
+    "annual-f": "annuelle",
+    "monthly-m": "mensuel",
+    "monthly-f": "mensuelle"
 }

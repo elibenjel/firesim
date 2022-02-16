@@ -5,6 +5,12 @@ import {
     Route
 } from 'react-router-dom';
 
+import {
+    TrendingUp,
+    Home as HomeIcon,
+    Analytics
+} from '@mui/icons-material';
+
 import Layout from './Layout.jsx';
 import WelcomeScreen from '../../pages/WelcomeScreen.jsx';
 import Home from '../../pages/Home.jsx';
@@ -12,11 +18,32 @@ import FastSim from '../../pages/FastSim.jsx';
 import MainSim from '../../pages/MainSim.jsx';
 import NotFound from '../../pages/NotFound.jsx';
 
+const tabs = [
+    {
+        name: 'home',
+        label: (t) => t('tab1'),
+        to: '/home',
+        icon: <HomeIcon />
+    },
+    {
+        name: 'fastsim',
+        label: (t) => t('tab2'),
+        to: '/fastsim',
+        icon: <TrendingUp />
+    },
+    {
+        name: 'mainsim',
+        label: (t) => t('tab3'),
+        to: '/mainsim/',
+        icon: <Analytics />
+    }
+];
+
 const AppRouter = ({ token, setLanguage }) => {
 
     return (
         <Router>
-            <Layout setLanguage={setLanguage} >
+            <Layout tabs={tabs} setLanguage={setLanguage} >
                 <Routes>
                     <Route path='/' element={<WelcomeScreen setToken={(value) => (token.current = value)} />} />
                     {(!!token.current) ?
