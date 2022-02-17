@@ -35,13 +35,13 @@ class SimulationAPI extends DataSource {
 
         if (found !== -1) {
             if (!overwrite) {
-                throw new ApolloError('Impossible to add a document with the same name as an existing one when both are owned by the same user', 'SPENDING_PROFILE_ALREADY_EXISTS');
+                throw new ApolloError('Impossible to add a document with the same name as an existing one when both are owned by the same user', 'SPENDINGS_PROFILE_ALREADY_EXISTS');
             } else {
                 userDocument.spendingsProfiles[found].name = name;
                 userDocument.spendingsProfiles[found].spendings = spendings;
                 userDocument.spendingsProfiles[found].total = total;
                 await userDocument.save();
-                console.log(`Modified spending profile ${name} of user ${userDocument.email}`);
+                console.log(`Modified spendings profile ${name} of user ${userDocument.email}`);
                 return userDocument.spendingsProfiles[found]._id;
             }
         } else {
@@ -54,7 +54,7 @@ class SimulationAPI extends DataSource {
             userDocument.spendingsProfiles.push(spendingsProfile);
             await userDocument.save();
             const spendingsProfileID = userDocument.spendingsProfiles.at(-1)._id;
-            console.log(`Saved new spending profile of user ${userDocument.email}:\n name: ${name}\n ID: ${spendingsProfileID}`);
+            console.log(`Saved new spendings profile of user ${userDocument.email}:\n name: ${name}\n ID: ${spendingsProfileID}`);
             return spendingsProfileID;
         }
     }
@@ -74,12 +74,12 @@ class SimulationAPI extends DataSource {
         }
 
         if (found === -1) {
-            throw new ApolloError(`Cannot remove spending profile ${name} of user ${userDocument.email} as it doesn't exist`, 'NO_CORRESPONDING_SPENDING_PROFILE');
+            throw new ApolloError(`Cannot remove spendings profile ${name} of user ${userDocument.email} as it doesn't exist`, 'NO_CORRESPONDING_SPENDINGS_PROFILE');
         }
         
         userDocument.spendingsProfiles[found].remove();
         await userDocument.save();
-        console.log(`Removed spending profile ${name} of user ${userDocument.email}`);
+        console.log(`Removed spendings profile ${name} of user ${userDocument.email}`);
         return true;
     }
 
@@ -95,6 +95,104 @@ class SimulationAPI extends DataSource {
     async getMySpendingsProfileNames() {
         const userDocument = this.context.user.document;
         return userDocument.spendingsProfiles.map(item => item.name);
+    }
+
+    async saveIncomeProfile({ overwrite, ...incomeProfileInfo }) {
+        const userDocument = this.context.user.document;
+        const { name, income, incomeFrequency, increaseFrequency } = incomeProfileInfo;
+
+        // returns the whole document: the user and the found subdocument (first user that have a subdocument)
+        // const found = await this.models.User.findOne({ 'incomeProfiles.name' : name }).exec();
+        let found = -1;
+        for (const index in userDocument.incomeProfiles) {
+            const currName = userDocument.incomeProfiles[index].name;
+            if (currName === name) {
+                found = index;
+                break;
+            }
+        }
+
+        if (found !== -1) {
+            if (!overwrite) {
+                throw new ApolloError('Impossible to add a document with the same name as an existing one when both are owned by the same user', 'INCOME_PROFILE_ALREADY_EXISTS');
+            } else {
+                userDocument.incomeProfiles[found].name = name;
+                userDocument.incomeProfiles[found].income = income;
+                userDocument.incomeProfiles[found].incomeFrequency = incomeFrequency;
+                userDocument.incomeProfiles[found].increaseFrequency = increaseFrequency;
+                await userDocument.save();
+                console.log(`Modified income profile ${name} of user ${userDocument.email}`);
+                return userDocument.incomeProfiles[found]._id;
+            }
+        } else {
+            const incomeProfile = {
+                name,
+                income,
+                incomeFrequency,
+                increaseFrequency
+            };
+    
+            userDocument.incomeProfiles.push(incomeProfile);
+            await userDocument.save();
+            const incomeProfileID = userDocument.incomeProfiles.at(-1)._id;
+            console.log(`Saved new income profile of user ${userDocument.email}:\n name: ${name}\n ID: ${incomeProfileID}`);
+            return incomeProfileID;
+        }
+    }
+
+    async removeProfile(profileType, name) {
+        const userDocument = this.context.user.document;
+        const profiles = userDocument[`${profileType}Profiles`];
+
+        // returns the whole document: the user and the found subdocument (first user that have a subdocument)
+        // const found = await this.models.User.findOne({ 'spendingsProfiles.name' : name }).exec();
+        let found = -1;
+        for (const index in profiles) {
+            const currName = profiles[index].name;
+            if (currName === name) {
+                found = index;
+                break;
+            }
+        }
+
+        if (found === -1) {
+            throw new ApolloError(`Cannot remove ${profileType} profile ${name} of user ${userDocument.email} as it doesn't exist`, `NO_CORRESPONDING_${profileType.toUpperCase()}_PROFILE`);
+        }
+        
+        profiles[found].remove();
+        await userDocument.save();
+        console.log(`Removed ${profileType} profile ${name} of user ${userDocument.email}`);
+        return true;
+    }
+
+    // async removeSpendingsProfile({ name }) {
+    //     return await this.removeProfile('spendings', name);
+    // }
+
+    async removeIncomeProfile({ name }) {
+        return await this.removeProfile('income', name);
+    }
+
+    async getProfile(profileType, name) {
+        const userDocument = this.context.user.document;
+        for (const item of userDocument[`${profileType}Profiles`]) {
+            if (item.name === name) {
+                return item;
+            }
+        }
+    }
+
+    // async getSpendingsProfile({ name }) {
+    //     return await this.getProfile('spendings', name);
+    // }
+
+    async getIncomeProfile({ name }) {
+        return await this.getProfile('income', name);
+    }
+
+    async getMyIncomeProfileNames() {
+        const userDocument = this.context.user.document;
+        return userDocument.incomeProfiles.map(item => item.name);
     }
 }
 

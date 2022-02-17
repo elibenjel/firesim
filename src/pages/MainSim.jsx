@@ -29,34 +29,34 @@ const Test = (props) => {
 const tabs = [
     {
         name: 'mainsim',
-        label: (t) => t('sim'),
+        label: (t) => t('sim-tab'),
         to: '/mainsim/',
         icon: <DisplaySettings />,
         element: <Test />
     },
     {
         name: 'spendings',
-        label: (t) => t('spendings'),
+        label: (t) => t('spendings-tab'),
         to: '/mainsim/spendings',
         icon: <Savings />,
         element: <Spendings />
     },
     {
         name: 'income',
-        label: (t) => t('income'),
+        label: (t) => t('income-tab'),
         to: '/mainsim/income',
         icon: <Paid />,
         element: <Income />
     },
     {
         name: 'market',
-        label: (t) => t('market'),
+        label: (t) => t('market-tab'),
         to: '/mainsim/market',
         icon: <BarChart />
     },
     {
         name: 'howto',
-        label: (t) => t('howto'),
+        label: (t) => t('howto-tab'),
         to: '/mainsim/howto',
         icon: <Help />
     },

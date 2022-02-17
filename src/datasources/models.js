@@ -12,17 +12,28 @@ module.exports.getModels = (mg) => {
         total: Number
     });
 
+    const incomeProfileSchema = new mg.Schema({
+        createdAt: { type : Date, default : Date.now },
+        updatedAt: { type : Date, default : Date.now },
+        name: { type : String, required : true },
+        income: { type : [
+            { income : Number, increase : Number, period : Number }
+        ]},
+        incomeFrequency: Number,
+        increaseFrequency: Number
+    });
+
     const userSchema = new mg.Schema({
         createdAt: { type : Date, default : Date.now },
         updatedAt: { type : Date, default : Date.now },
         email: { type : String, required : true, unique : true},
         password: { type : String, required : true},
         roles: {type : [{type : String, enum : [...UserRoles]}], default : [UserRoles.USER]},
-        spendingsProfiles: { type : [spendingsProfileSchema], default : [] }
+        spendingsProfiles: { type : [spendingsProfileSchema], default : [] },
+        incomeProfiles: { type : [incomeProfileSchema], default : [] }
     });
   
     const User = mg.model('User', userSchema);
-    // const SpendingsProfile = mg.model('SpendingsProfile', spendingsProfileSchema);
 
     return { User };
 }

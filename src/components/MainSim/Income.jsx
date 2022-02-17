@@ -118,7 +118,7 @@ const LabelsLine = (props) => {
 
 const IncomeLine = (props) => {
     const {
-        income=0, increase=0, period='inf',
+        income=0, increase=0, period=-1,
         setIncome, setIncrease, setPeriod, setLocked,
         focusedFields, myIndex
     } = props;
@@ -191,13 +191,18 @@ const IncomeLine = (props) => {
                     onChange={handleIncreaseChange} onFocus={handleFocus} onBlur={handleIncreaseBlur} />
             </MyGrid>
             {
-                period === 'inf' ? null
-                :
                 <MyGrid item xs={rrc} >
-                    <Typo>{t('income-line-2')}</Typo>
-                    <LockableTextField baseID='period' value={period} step={1} min={1} size={2}
-                        onChange={handlePeriodChange} onFocus={handleFocus} onBlur={handlePeriodBlur} />
-                    <Typo>{t('income-line-3') + (period === 0 ? '' : 's')}</Typo>
+                {
+                    period === -1 ?
+                    <Typo>{t('income-line-end')}</Typo>    
+                    :
+                    <>
+                        <Typo>{t('income-line-2')}</Typo>
+                        <LockableTextField baseID='period' value={period} step={1} min={1} size={2}
+                            onChange={handlePeriodChange} onFocus={handleFocus} onBlur={handlePeriodBlur} />
+                        <Typo>{t('income-line-3') + (period === 0 ? '' : 's')}</Typo>
+                    </>
+                }
                 </MyGrid>
             }
         </MyGrid>
@@ -205,11 +210,14 @@ const IncomeLine = (props) => {
 }
 
 const IncomeProfile = (props) => {
-    const { tradHook : t, initial = [], trackProfileData, setIsProfileLocked } = props;
-    const [incomeFrequency, setIncomeFrequency] = useState(0);
-    const [increaseFrequency, setIncreaseFrequency] = useState(0);
+    const {
+        tradHook : t,
+        initial = { income : [], incomeFrequency : 0, increaseFrequency : 0 },
+        trackProfileData, setIsProfileLocked } = props;
+    const [incomeFrequency, setIncomeFrequency] = useState(initial.incomeFrequency);
+    const [increaseFrequency, setIncreaseFrequency] = useState(initial.increaseFrequency);
     const [profileState, setProfileState] = useState({
-        lines: initial.map((item, index) => {
+        lines: initial.income.map((item, index) => {
             return {
                 myKey: index,
                 ...item
@@ -273,7 +281,7 @@ const IncomeProfile = (props) => {
                         myKey: createdLines.current,
                         income: 0,
                         increase: 0,
-                        period: 'inf'
+                        period: -1
                     }
                 ]
             };
@@ -285,8 +293,12 @@ const IncomeProfile = (props) => {
     const removeLine = () => {
         setProfileState(current => {
             const newLines = [...current.lines];
-            newLines.pop();
-            newLines.at(-1).period = 'inf';
+            if (newLines.length > 1) {
+                newLines.pop();
+                newLines.at(-1).period = -1;
+            } else {
+                newLines[0] = { income : 0, increase : 0, period : -1 };
+            }
             const res = {
                 ...current,
                 lines: newLines
@@ -298,7 +310,7 @@ const IncomeProfile = (props) => {
     trackProfileData(profileState.lines.map(item => {
         const { myKey, ...dataToSend } = item;
         return dataToSend;
-    }));
+    }), incomeFrequency, increaseFrequency);
 
     return (
         <MyGrid container direction='row' columns={tc} variant='side-primary' reversed m={2} p={2} pr={30} width='100%' >
@@ -333,31 +345,36 @@ const IncomeProfile = (props) => {
     );
 }
 
-const initialProfileData = [
-    {
-        income: 2000,
-        increase: 0,
-        period: 2,
-    },
-    {
-        income: 4000,
-        increase: 100,
-        period: 'inf',
-    }
-];
+const initialProfileData = {
+        income: [
+        {
+            income: 2000,
+            increase: 0,
+            period: 2,
+        },
+        {
+            income: 4000,
+            increase: 100,
+            period: -1,
+        }
+    ],
+    incomeFrequency: 0,
+    increaseFrequency: 0
+};
 
 const Income = (props) => {
     const { t } = useTranslation('MainSim');
 
     const profileData = useRef({});
-    const trackProfileData = (incomeValue) => {
-        profileData.current = { incomeValue };
+    const trackProfileData = (incomeValue, incomeFrequencyValue, increaseFrequencyValue) => {
+        profileData.current = { incomeValue, incomeFrequencyValue, increaseFrequencyValue };
     }
 
     const profileManagerProps = {
         tradHook: t,
         initialProfileData,
-        managerFunctions: manageIncome
+        managerFunctions: manageIncome,
+        profileData
     }
 
     return (

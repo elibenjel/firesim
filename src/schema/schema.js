@@ -26,6 +26,25 @@ const typeDefs = gql`
         frequency: Int!
     }
 
+    type IncomeProfile {
+        name: String!
+        income: [Income!]!
+        incomeFrequency: Int!
+        increaseFrequency: Int!
+    }
+
+    type Income {
+        income: Float!
+        increase: Float!
+        period: Int!
+    }
+
+    input IncomeInput {
+        income: Float!
+        increase: Float!
+        period: Int!
+    }
+
     enum Role {
         USER
         ADMIN
@@ -36,6 +55,8 @@ const typeDefs = gql`
         users: [User!]
         mySpendingsProfileNames: [String!]
         loadSpendingsProfile(name: String!): SpendingsProfile
+        myIncomeProfileNames: [String!]
+        loadIncomeProfile(name: String!): IncomeProfile
     }
 
     type Mutation {
@@ -43,6 +64,8 @@ const typeDefs = gql`
         signup(email: String!, password: String!): User
         saveSpendingsProfile(name: String!, spendings: [SpendingInput!]!, total: Float!, overwrite: Boolean): ID
         removeSpendingsProfile(name: String!): Boolean
+        saveIncomeProfile(name: String!, income: [IncomeInput!]!, incomeFrequency: Int!, increaseFrequency: Int!, overwrite: Boolean): ID
+        removeIncomeProfile(name: String!): Boolean
     }
 `;
 

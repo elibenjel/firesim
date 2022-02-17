@@ -56,7 +56,18 @@ const useFetchSpendingsProfile = useFetchProfile('loadSpendingsProfile', `{
     }
 }`);
 
+const useFetchIncomeProfile = useFetchProfile('loadIncomeProfile', `{
+    income {
+        income,
+        increase,
+        period
+    }
+    incomeFrequency
+    increaseFrequency
+}`);
+
 const useFetchMySpendingsProfileNames = useFetchMyProfileNames('mySpendingsProfileNames');
+const useFetchMyIncomeProfileNames = useFetchMyProfileNames('myIncomeProfileNames');
 
 const useRemoveProfile = (mutationName, createGraphqlArgs) => () => {
     const { mutate } = useMutation();
@@ -107,16 +118,43 @@ const useSaveSpendingsProfile = useSaveProfile('saveSpendingsProfile', (mutation
                     return [...prev, { label, amount, frequency }]
                 }, [])
             },
-            total: { graphqlType : 'Float!', value : totalValue },
-            overwrite: { graphqlType : 'Boolean', value : false }
+            total: { graphqlType : 'Float!', value : totalValue }
+        },
+        selection: undefined
+    }
+});
+
+const useSaveIncomeProfile = useSaveProfile('saveIncomeProfile', (mutationArgs) => {
+    const { nameValue, incomeValue, incomeFrequencyValue, increaseFrequencyValue } = mutationArgs;
+    return {
+        args: {
+            name: { graphqlType : 'String!', value: nameValue },
+            income: {
+                graphqlType: '[IncomeInput!]!',
+                value: incomeValue
+            },
+            incomeFrequency: { graphqlType : 'Int!', value : incomeFrequencyValue },
+            increaseFrequency: { graphqlType : 'Int!', value : increaseFrequencyValue }
         },
         selection: undefined
     }
 });
 
 const useCreateSpendingsProfile = useSaveSpendingsProfile(false);
+const useCreateIncomeProfile = useSaveIncomeProfile(false);
 const useOverwriteSpendingsProfile = useSaveSpendingsProfile(true);
+const useOverwriteIncomeProfile = useSaveIncomeProfile(true);
+
 const useRemoveSpendingsProfile = useRemoveProfile('removeSpendingsProfile', (mutationArgs) => {
+    const { nameValue } = mutationArgs;
+    return {
+        args: {
+            name: { graphqlType : 'String!', value: nameValue },
+        },
+        selection: undefined
+    }
+});
+const useRemoveIncomeProfile = useRemoveProfile('removeIncomeProfile', (mutationArgs) => {
     const { nameValue } = mutationArgs;
     return {
         args: {
@@ -135,9 +173,9 @@ export const manageSpendings = {
 }
 
 export const manageIncome = {
-    useFetchNames: useFetchMySpendingsProfileNames,
-    useFetchProfile: useFetchSpendingsProfile,
-    useCreateProfile: useCreateSpendingsProfile,
-    useOverwriteProfile: useOverwriteSpendingsProfile,
-    useRemoveProfile: useRemoveSpendingsProfile
+    useFetchNames: useFetchMyIncomeProfileNames,
+    useFetchProfile: useFetchIncomeProfile,
+    useCreateProfile: useCreateIncomeProfile,
+    useOverwriteProfile: useOverwriteIncomeProfile,
+    useRemoveProfile: useRemoveIncomeProfile
 }

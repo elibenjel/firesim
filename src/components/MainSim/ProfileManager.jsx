@@ -50,6 +50,8 @@ const ProfileManager = (props) => {
         feedbackOptions: { replace : t('load-success') }
     });
 
+    console.log(fetchedProfile, initialProfileData)
+
     disableFetchProfileQuery.current = true;
 
     const { mutate : createProfile } = useCreateProfile();
