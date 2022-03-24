@@ -5,8 +5,9 @@ import { Box, Paper } from '@mui/material';
 import { Help, Savings, BarChart, DisplaySettings, Paid } from '@mui/icons-material';
 
 import CustomDrawer from '../components/MainSim/CustomDrawer.jsx';
-import Spendings from '../components/MainSim/Spendings.jsx';
-import Income from '../components/MainSim/Income.jsx';
+import Spendings from './MainSim/Spendings.jsx';
+import Income from './MainSim/Income.jsx';
+import Market from './MainSim/Market.jsx';
 import ParameterField from '../components/FastSim/ParameterField.jsx';
 
 
@@ -52,7 +53,8 @@ const tabs = [
         name: 'market',
         label: (t) => t('market-tab'),
         to: '/mainsim/market',
-        icon: <BarChart />
+        icon: <BarChart />,
+        element: <Market />
     },
     {
         name: 'howto',

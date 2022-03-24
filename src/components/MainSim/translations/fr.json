@@ -42,5 +42,7 @@
     "annual-m": "annuel",
     "annual-f": "annuelle",
     "monthly-m": "mensuel",
-    "monthly-f": "mensuelle"
+    "monthly-f": "mensuelle",
+    "igr": "Taux de croissance du marché",
+    "ir": "Taux des dividendes"
 }

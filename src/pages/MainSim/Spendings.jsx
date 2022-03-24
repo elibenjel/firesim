@@ -18,10 +18,10 @@ import {
     VisibilityOutlined
 } from '@mui/icons-material';
 
-import ValidatorWrapper from "../Feedback/ValidatorWrapper.jsx";
-import ProfileManager from './ProfileManager.jsx';
-import ControlButton from "./ControlButton.jsx";
-import LockableTextField from "./LockableTextField.jsx";
+import ValidatorWrapper from "../../components/Feedback/ValidatorWrapper.jsx";
+import ProfileManager from '../../components/MainSim/ProfileManager.jsx';
+import ControlButton from "../../components/MainSim/ControlButton.jsx";
+import LockableTextField from "../../components/MainSim/LockableTextField.jsx";
 import { manageSpendings } from '../../services/simulation.js';
 import * as functions from '../../utils/functions';
 import { t as tradF } from "i18next";
@@ -334,8 +334,8 @@ const AddLineButton = (props) => {
     const sxDisabled = {};
 
     return (
-        <ControlButton title={title} size='large' onClick={handleClick}
-            icon={<Add sx={other.disabled ? sxDisabled : sx} />} {...other} />
+        <ControlButton title={title} onClick={handleClick}
+            icon={<Add fontSize='large' sx={other.disabled ? sxDisabled : sx} />} {...other} />
     )
 }
 

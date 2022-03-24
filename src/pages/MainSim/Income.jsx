@@ -5,9 +5,9 @@ import { Box, Grid, Typography, InputAdornment, Paper } from '@mui/material';
 import { Add, Lock, Remove } from '@mui/icons-material';
 
 
-import ProfileManager from './ProfileManager.jsx';
-import LockableTextField from './LockableTextField.jsx';
-import ControlButton from './ControlButton.jsx';
+import ProfileManager from '../../components/MainSim/ProfileManager.jsx';
+import LockableTextField from '../../components/MainSim/LockableTextField.jsx';
+import ControlButton from '../../components/MainSim/ControlButton.jsx';
 import { manageIncome } from '../../services/simulation';
 import { useEffect } from 'react';
 
