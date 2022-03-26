@@ -17,8 +17,13 @@ module.exports = {
             const result = dataSources.simulationAPI.getMyIncomeProfileNames();
             return result;
         },
+        myMarketProfileNames: (_, __, { dataSources }) => {
+            const result = dataSources.simulationAPI.getMyMarketProfileNames();
+            return result;
+        },
         loadSpendingsProfile: (_, args, { dataSources }) => dataSources.simulationAPI.getSpendingsProfile(args),
         loadIncomeProfile: (_, args, { dataSources }) => dataSources.simulationAPI.getIncomeProfile(args),
+        loadMarketProfile: (_, args, { dataSources }) => dataSources.simulationAPI.getMarketProfile(args)
     },
     Mutation: {
         login: async (_, args, { dataSources }) => {
@@ -43,6 +48,14 @@ module.exports = {
         },
         removeIncomeProfile: async (_, args, { dataSources }) => {
             const success = await dataSources.simulationAPI.removeIncomeProfile(args);
+            return success;
+        },
+        saveMarketProfile: async (_, args, { dataSources }) => {
+            const id = await dataSources.simulationAPI.saveMarketProfile(args);
+            return id;
+        },
+        removeMarketProfile: async (_, args, { dataSources }) => {
+            const success = await dataSources.simulationAPI.removeMarketProfile(args);
             return success;
         }
     },

@@ -27,7 +27,6 @@ const getdefaultRQFn = (isMutation) => async (obj) => {
         ${key}${emptyArgs ? '' : `(${queryArgs})`}${selection}
     }`;
   
-    
     const payload = {
         query,
         variables: Object.entries(args).reduce((prev, [argName, { value }]) => ({ ...prev, [argName]: value }), {})
@@ -63,7 +62,7 @@ const getdefaultRQFn = (isMutation) => async (obj) => {
     } catch (error) {
         res.error = error;
         res.feedback = feedbackOptions.disable || feedbackOptions.disableOnError ? ''
-        : createFeedback('onError')(`Failed to fetch ${key} : ${res.error.map(item => item.extensions.code).join(' | ')}`);
+        : createFeedback('onError')(`Failed to fetch ${key} : ${res.error.map ? res.error.map(item => item.extensions.code).join(' | ') : res.error}`);
         throw res;
     }
 }

@@ -140,6 +140,45 @@ class SimulationAPI extends DataSource {
         }
     }
 
+    async saveMarketProfile({ overwrite, ...marketProfileInfo }) {
+        const userDocument = this.context.user.document;
+        const { name, variations } = marketProfileInfo;
+
+        // returns the whole document: the user and the found subdocument (first user that have a subdocument)
+        // const found = await this.models.User.findOne({ 'incomeProfiles.name' : name }).exec();
+        let found = -1;
+        for (const index in userDocument.marketProfiles) {
+            const currName = userDocument.marketProfiles[index].name;
+            if (currName === name) {
+                found = index;
+                break;
+            }
+        }
+
+        if (found !== -1) {
+            if (!overwrite) {
+                throw new ApolloError('Impossible to add a document with the same name as an existing one when both are owned by the same user', 'INCOME_PROFILE_ALREADY_EXISTS');
+            } else {
+                userDocument.marketProfiles[found].name = name;
+                userDocument.marketProfiles[found].variations = variations;
+                await userDocument.save();
+                console.log(`Modified market profile ${name} of user ${userDocument.email}`);
+                return userDocument.marketProfiles[found]._id;
+            }
+        } else {
+            const marketProfile = {
+                name,
+                variations
+            };
+    
+            userDocument.marketProfiles.push(marketProfile);
+            await userDocument.save();
+            const marketProfileID = userDocument.marketProfiles.at(-1)._id;
+            console.log(`Saved new market profile of user ${userDocument.email}:\n name: ${name}\n ID: ${marketProfileID}`);
+            return marketProfileID;
+        }
+    }
+
     async removeProfile(profileType, name) {
         const userDocument = this.context.user.document;
         const profiles = userDocument[`${profileType}Profiles`];
@@ -173,6 +212,10 @@ class SimulationAPI extends DataSource {
         return await this.removeProfile('income', name);
     }
 
+    async removeMarketProfile({ name }) {
+        return await this.removeProfile('market', name);
+    }
+
     async getProfile(profileType, name) {
         const userDocument = this.context.user.document;
         for (const item of userDocument[`${profileType}Profiles`]) {
@@ -190,9 +233,18 @@ class SimulationAPI extends DataSource {
         return await this.getProfile('income', name);
     }
 
+    async getMarketProfile({ name }) {
+        return await this.getProfile('market', name);
+    }
+
     async getMyIncomeProfileNames() {
         const userDocument = this.context.user.document;
         return userDocument.incomeProfiles.map(item => item.name);
+    }
+
+    async getMyMarketProfileNames() {
+        const userDocument = this.context.user.document;
+        return userDocument.marketProfiles.map(item => item.name);
     }
 }
 

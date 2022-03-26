@@ -14,23 +14,22 @@ const typeDefs = gql`
         total: Float!
     }
 
-    type Spending {
-        label: String!
-        amount: Float!
-        frequency: Int!
-    }
-
-    input SpendingInput {
-        label: String!
-        amount: Float!
-        frequency: Int!
-    }
-
     type IncomeProfile {
         name: String!
         income: [Income!]!
         incomeFrequency: Int!
         increaseFrequency: Int!
+    }
+
+    type MarketProfile {
+        name: String!
+        variations: [MarketYear!]!
+    }
+
+    type Spending {
+        label: String!
+        amount: Float!
+        frequency: Int!
     }
 
     type Income {
@@ -39,10 +38,28 @@ const typeDefs = gql`
         period: Int!
     }
 
+    type MarketYear {
+        year: Float!
+        igr: Float!
+        ir: Int!
+    }
+
+    input SpendingInput {
+        label: String!
+        amount: Float!
+        frequency: Int!
+    }
+
     input IncomeInput {
         income: Float!
         increase: Float!
         period: Int!
+    }
+
+    input MarketYearInput {
+        year: Float!
+        igr: Float!
+        ir: Int!
     }
 
     enum Role {
@@ -57,6 +74,8 @@ const typeDefs = gql`
         loadSpendingsProfile(name: String!): SpendingsProfile
         myIncomeProfileNames: [String!]
         loadIncomeProfile(name: String!): IncomeProfile
+        myMarketProfileNames: [String!]
+        loadMarketProfile(name: String!): MarketProfile
     }
 
     type Mutation {
@@ -66,6 +85,8 @@ const typeDefs = gql`
         removeSpendingsProfile(name: String!): Boolean
         saveIncomeProfile(name: String!, income: [IncomeInput!]!, incomeFrequency: Int!, increaseFrequency: Int!, overwrite: Boolean): ID
         removeIncomeProfile(name: String!): Boolean
+        saveMarketProfile(name: String!, variations: [MarketYearInput!]!, overwrite: Boolean): ID
+        removeMarketProfile(name: String!): Boolean
     }
 `;
 

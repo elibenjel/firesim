@@ -229,7 +229,6 @@ const IncomeProfile = (props) => {
     const focusedFields = useRef(0);
 
     useEffect(() => {
-        console.log(focusedFields.current)
         setIsProfileLocked(!focusedFields.current);
     }, [!!focusedFields.current]);
 

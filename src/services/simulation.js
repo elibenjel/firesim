@@ -66,8 +66,17 @@ const useFetchIncomeProfile = useFetchProfile('loadIncomeProfile', `{
     increaseFrequency
 }`);
 
+const useFetchMarketProfile = useFetchProfile('loadMarketProfile', `{
+    variations {
+        year,
+        igr,
+        ir
+    }
+}`);
+
 const useFetchMySpendingsProfileNames = useFetchMyProfileNames('mySpendingsProfileNames');
 const useFetchMyIncomeProfileNames = useFetchMyProfileNames('myIncomeProfileNames');
+const useFetchMyMarketProfileNames = useFetchMyProfileNames('myMarketProfileNames');
 
 const useRemoveProfile = (mutationName, createGraphqlArgs) => () => {
     const { mutate } = useMutation();
@@ -140,10 +149,26 @@ const useSaveIncomeProfile = useSaveProfile('saveIncomeProfile', (mutationArgs) 
     }
 });
 
+const useSaveMarketProfile = useSaveProfile('saveMarketProfile', (mutationArgs) => {
+    const { nameValue, variationsValue } = mutationArgs;
+    return {
+        args: {
+            name: { graphqlType : 'String!', value: nameValue },
+            variations: {
+                graphqlType: '[MarketYearInput!]!',
+                value: variationsValue
+            }
+        },
+        selection: undefined
+    }
+});
+
 const useCreateSpendingsProfile = useSaveSpendingsProfile(false);
 const useCreateIncomeProfile = useSaveIncomeProfile(false);
+const useCreateMarketProfile = useSaveMarketProfile(false);
 const useOverwriteSpendingsProfile = useSaveSpendingsProfile(true);
 const useOverwriteIncomeProfile = useSaveIncomeProfile(true);
+const useOverwriteMarketProfile = useSaveMarketProfile(true);
 
 const useRemoveSpendingsProfile = useRemoveProfile('removeSpendingsProfile', (mutationArgs) => {
     const { nameValue } = mutationArgs;
@@ -154,7 +179,18 @@ const useRemoveSpendingsProfile = useRemoveProfile('removeSpendingsProfile', (mu
         selection: undefined
     }
 });
+
 const useRemoveIncomeProfile = useRemoveProfile('removeIncomeProfile', (mutationArgs) => {
+    const { nameValue } = mutationArgs;
+    return {
+        args: {
+            name: { graphqlType : 'String!', value: nameValue },
+        },
+        selection: undefined
+    }
+});
+
+const useRemoveMarketProfile = useRemoveProfile('removeMarketProfile', (mutationArgs) => {
     const { nameValue } = mutationArgs;
     return {
         args: {
@@ -178,4 +214,12 @@ export const manageIncome = {
     useCreateProfile: useCreateIncomeProfile,
     useOverwriteProfile: useOverwriteIncomeProfile,
     useRemoveProfile: useRemoveIncomeProfile
+}
+
+export const manageMarket = {
+    useFetchNames: useFetchMyMarketProfileNames,
+    useFetchProfile: useFetchMarketProfile,
+    useCreateProfile: useCreateMarketProfile,
+    useOverwriteProfile: useOverwriteMarketProfile,
+    useRemoveProfile: useRemoveMarketProfile
 }

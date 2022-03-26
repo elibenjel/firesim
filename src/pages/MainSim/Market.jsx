@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { t as tradF } from 'i18next';
 import { Box, Paper, Typography } from '@mui/material';
 import {
@@ -10,7 +10,7 @@ import {
 } from '@mui/icons-material';
 
 import ProfileManager from '../../components/MainSim/ProfileManager.jsx';
-import { manageIncome } from '../../services/simulation.js';
+import { manageMarket } from '../../services/simulation.js';
 import ControlButton from "../../components/MainSim/ControlButton.jsx";
 
 const t = (arg) => tradF(arg, { ns : 'MainSim' });
@@ -237,7 +237,10 @@ const MarketProfile = (props) => {
         trackProfileData, setIsProfileLocked
     } = props;
 
-    const [marketGrowth, setMarketGrowth] = useState(initial);
+    const [marketGrowth, setMarketGrowth] = useState(
+        Object.values(initial.variations)
+        .reduce((prev, { year, igr, ir }) => ({ ...prev, [year] : { igr, ir } }), {})
+    );
     const modificationCounter = useRef({}); // used for the key prop of each MarketYear
     const setRate = (rateName) => (year) => (value) => {
         if (modificationCounter.current[year]) {
@@ -255,6 +258,10 @@ const MarketProfile = (props) => {
             }
         });
     }
+
+    useEffect(() => {
+        setIsProfileLocked(true);
+    }, []);
 
     const setIgr = setRate('igr');
     const setIr = setRate('ir');
@@ -369,7 +376,6 @@ const MarketProfile = (props) => {
             {
                 marketYears.map((marketYearProps, index) => {
                     const { start, end } = marketYearProps;
-                    console.log(start, end)
                     const key = [start, modificationCounter.current[start], end, modificationCounter.current[end]];
                     return (
                         <MarketYear key={key} {...marketYearProps} myIndex={index} />
@@ -387,19 +393,21 @@ const MarketProfile = (props) => {
 }
 
 // const initialProfileData = { igr: { 2022 : 8 }, ir : { 2022 : 2 } };
-const initialProfileData = { [minYear]: { igr : 8, ir : 2 } };
+const initialProfileData = { variations : [{ year : 2022, igr : 8, ir : 2 }] };
 
 const Market = (props) => {
 
     const profileData = useRef({});
     const trackProfileData = (data) => {
-        profileData.current = data;
+        profileData.current = {
+            variationsValue : Object.entries(data).map(([year, { igr, ir }]) => ({ year : parseInt(year, 10), igr, ir }))
+        };
     }
 
     const profileManagerProps = {
         tradHook: t,
         initialProfileData,
-        managerFunctions: manageIncome,
+        managerFunctions: manageMarket,
         profileData
     }
 
