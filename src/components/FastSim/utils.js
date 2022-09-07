@@ -1,6 +1,5 @@
 import * as functions from '../../utils/functions';
 
-
 export const fieldInfo = {
     annualIncomeInput: {
         index: 1,

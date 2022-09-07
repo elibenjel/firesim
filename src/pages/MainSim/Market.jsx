@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { t as tradF } from 'i18next';
-import { Box, Paper, Typography } from '@mui/material';
+import { Box, Paper, Typography, Button, InputAdornment } from '@mui/material';
 import {
     RemoveCircleOutline,
     Undo,
@@ -9,6 +9,7 @@ import {
     Clear,
 } from '@mui/icons-material';
 
+import MarketRandomizer from '../../components/MainSim/MarketRandomizer.jsx';
 import ProfileManager from '../../components/MainSim/ProfileManager.jsx';
 import { manageMarket } from '../../services/simulation.js';
 import ControlButton from "../../components/MainSim/ControlButton.jsx";
@@ -44,12 +45,12 @@ const getArrowCoordinates = (posX, headY) => {
         }
     }
 }
-const drawArrow = (args) => (
+const drawArrow = (args, previz = false) => (
     <>
         <line {...args.body} {...args.style} />
         <line {...args.headLeft} {...args.style} />
         <line {...args.headRight} {...args.style} />
-        <text {...args.valueLabel} />
+        {previz ? null : <text {...args.valueLabel} />}
     </>
 );
 
@@ -60,7 +61,6 @@ const Typo = ({ children, ...other }) => {
 const Arrow = (props) => {
     const { posX, headY, minHeadY, maxHeadY, mySvgID, myRect, setState, fillBackground, textBackground, valueLabel } = props;
     const color = (headY, op) => headY > 0 ? `rgba(170,0,0,${op}%)` : `rgba(0,110,0,${op}%)`;
-
     const [arrow, setArrow] = useState({
         headY,
         style: {
@@ -134,7 +134,16 @@ const Arrow = (props) => {
     }
 
     const onClick = () => {
-        setState(- arrowPreviz.headY / unitConversion)
+        const newValue = - arrowPreviz.headY / unitConversion;
+        setState(newValue);
+        setArrow((current) => {
+            return {
+                ...current,
+                headY: arrowPreviz.headY,
+                ...getArrowCoordinates(posX, arrowPreviz.headY),
+                valueLabel: { ...current.valueLabel, fill : color(arrowPreviz.headY, 100), children: `${newValue}%` }
+            }
+        })
     }
 
     const handlers = { onMouseMove, onMouseEnter, onMouseLeave, onClick };
@@ -153,14 +162,13 @@ const Arrow = (props) => {
             }
             <rect {...myRect} {...handlers} fill='transparent' />
             {drawArrow(arrow)}
-            {drawArrow(arrowPreviz)}
+            {drawArrow(arrowPreviz, true)}
         </>
     )
 }
 
 const MarketYear = (props) => {
     const { start, end, igr, setIgr, ir, setIr, myIndex, enlarge, disableEnlarge, shrink, disableShrink, remove, disableRemove } = props;
-    
     const mySvgID = `market-year-svg-${myIndex}`;
 
     const labelText = end < start ? `${start} +` : (start === end ? `${start}` : [start, end].join('🠒'));
@@ -174,8 +182,8 @@ const MarketYear = (props) => {
         myRect: { x : 0, y : svgViewBox[1], width : '50%', height : '100%'},
         setState: setIgr,
         textBackground: t('igr').toUpperCase(),
-        fillBackground: myIndex % 2 ? 'rgb(230,230,230)' : 'rgba(0,0,0,0)',
-        valueLabel: { x : 17.5, y : 4, fontSize: 'smaller', textAnchor: 'middle', children : `${igr}%` }
+        fillBackground: myIndex % 2 ? 'rgb(230,230,230)' : 'rgba(248,248,248,80)',
+        valueLabel: { x : 17.5, y : 4, fontSize: '8pt', textAnchor: 'middle', children : `${igr}%` }
     };
 
     const arrowIr = {
@@ -187,14 +195,14 @@ const MarketYear = (props) => {
         myRect: { x : svgViewBox[2] / 2, y : svgViewBox[1], width : '50%', height : '100%'},
         setState: setIr,
         textBackground: t('ir').toUpperCase(),
-        fillBackground: myIndex % 2 ? 'rgb(230,230,230)' : 'rgba(0,0,0,0)',
-        valueLabel: { x : 85, y : 4, fontSize: 'smaller', textAnchor: 'middle', children : `${ir}%` }
+        fillBackground: myIndex % 2 ? 'rgb(230,230,230)' : 'rgba(248,248,248,80)',
+        valueLabel: { x : 85, y : 4, fontSize: '8pt', textAnchor: 'middle', children : `${ir}%` }
     }
 
     return (
         <Box display='flex' flexDirection='column' justifyContent='center' alignItems='flex-end'
-            m={1} height='100%' width={90} >
-            <svg id={mySvgID} viewBox={svgViewBox.join(' ')}>
+            m={1} pl={1} height='100%' >
+            <svg id={mySvgID} width='100px' height='550px' viewBox={svgViewBox.join(' ')}>
                 <Arrow {...arrowIgr} />
                 <Arrow {...arrowIr} />
                 <line {...base} />
@@ -218,9 +226,10 @@ const AddYearButton = (props) => {
 
     const sxIcon = {
         fill: (theme) => theme.palette.secondary.dark,
-        border: 'solid',
         borderRadius:'50%',
-        borderColor: (theme) => theme.palette.secondary.dark
+        borderColor: (theme) => theme.palette.secondary.dark,
+        backgroundColor: (theme) => theme.palette.background.paper,
+        p: 1
     }
 
     const sxDisabledIcon = {};
@@ -231,23 +240,26 @@ const AddYearButton = (props) => {
     )
 }
 
+
 const MarketProfile = (props) => {
     const {
         initial,
         trackProfileData, setIsProfileLocked
     } = props;
 
+    const yearCounter = useRef(-1); // used for the key prop of each MarketYear
     const [marketGrowth, setMarketGrowth] = useState(
         Object.values(initial.variations)
-        .reduce((prev, { year, igr, ir }) => ({ ...prev, [year] : { igr, ir } }), {})
+        .reduce((prev, { year, igr, ir }) => {
+            yearCounter.current += 1;
+            return { ...prev, [year] : { igr, ir, ID : yearCounter.current } }
+        }, {})
     );
-    const modificationCounter = useRef({}); // used for the key prop of each MarketYear
+
+    const [randomize, setRandomize] = useState(false);
+    const [enableRandomize, setEnableRandomize] = useState(false);
+
     const setRate = (rateName) => (year) => (value) => {
-        if (modificationCounter.current[year]) {
-            modificationCounter.current[year] += 1;
-        } else {
-            modificationCounter.current[year] = 1;
-        }
         setMarketGrowth(current => {
             return {
                 ...current,
@@ -269,6 +281,9 @@ const MarketProfile = (props) => {
     // default value for igr and ir
     let lastIgr = 8;
     let lastIr = 2;
+    let avgIgr = 0;
+    let avgIr = 0;
+    let avgPeriod = 0;
 
     // retrieve the years for which igr and/or ir are specified
     const years = [ ...new Set(Object.keys(marketGrowth).map((year) => parseInt(year, 10))) ];
@@ -277,7 +292,7 @@ const MarketProfile = (props) => {
     // build the props for each MarketYear to render
     const marketYears = [];
     years.forEach((start, index, years) => {
-        let { igr, ir } = marketGrowth[start];
+        let { igr, ir, ID } = marketGrowth[start];
         if (igr) {
             lastIgr = igr;
         } else {
@@ -291,23 +306,12 @@ const MarketProfile = (props) => {
         }
 
         const end = years[index+1] || 0;
-        const enlargeLeft = () => {
-            if (index === 0 || start - years[index - 1] === 1) {
-                return
-            }
-            setMarketGrowth((current) => {
-                return {
-                    ...current,
-                    [start-1]: current[start]
-                }
-            });
-        }
+        
+        avgIgr += end !== 0 ? (end-start)*igr : igr;
+        avgIr += end !== 0 ? (end-start)*ir : ir;
+        avgPeriod += end !== 0 ? (end-start) : 1;
 
         const enlarge = () => {
-            // if (index === years.length - 1) {
-            //     return
-            // }
-
             setMarketGrowth((current) => {
                 const newState = {};
                 Object.keys(current).forEach((year) => {
@@ -323,10 +327,6 @@ const MarketProfile = (props) => {
         }
 
         const shrink = () => {
-            // if (index === years.length - 1 || years[index + 1] - start === 1) {
-            //     return
-            // }
-
             setMarketGrowth((current) => {
                 const newState = {
                     ...current,
@@ -342,7 +342,7 @@ const MarketProfile = (props) => {
                 const newState = { ...current };
                 delete newState[start];
                 if (index === 0) {
-                    newState[minYear] = newState[years[1]];
+                    newState[0] = newState[years[1]];
                     delete newState[years[1]];
                 }
                 return newState;
@@ -350,7 +350,7 @@ const MarketProfile = (props) => {
         }
 
         marketYears.push({
-            start, end: end - 1, igr, setIgr : setIgr(start), ir, setIr : setIr(start),
+            ID, start: start + minYear, end: end - 1 + minYear, igr, setIgr : setIgr(start), ir, setIr : setIr(start),
             enlarge, shrink, remove,
             disableEnlarge: index === years.length - 1,
             disableShrink: index === years.length - 1 || years[index + 1] - start === 1,
@@ -360,40 +360,70 @@ const MarketProfile = (props) => {
 
     const addYear = () => {
         const lastYear = marketYears.at(-1);
-        const newYear = lastYear.start - - 1;
+        const newYear = lastYear.start + 1 - minYear;
         setMarketGrowth((current) => {
+            yearCounter.current += 1;
             return {
                 ...current,
-                [newYear]: { igr : lastIgr, ir : lastIr}
+                [newYear]: { igr : lastIgr, ir : lastIr, ID : yearCounter.current }
             }
         });
     }
 
+    const setRandomMarket = (randomMarket) => {
+        yearCounter.current = -1;
+        Object.keys(randomMarket).forEach(year => {
+            yearCounter.current += 1;
+            randomMarket[year].ID = yearCounter.current;
+        })
+
+        setMarketGrowth(randomMarket);
+    }
+
+    const handleRandomize = () => {
+        setRandomize(true);
+    }
+
+    avgIgr /= avgPeriod;
+    avgIr /= avgPeriod;
+
     trackProfileData(marketGrowth);
 
     return (
-        <Box display='flex' alignItems='flex-start' justifyContent='space-evenly' component={Paper} elevation={0} p={1} m={2} >
-            {
-                marketYears.map((marketYearProps, index) => {
-                    const { start, end } = marketYearProps;
-                    const key = [start, modificationCounter.current[start], end, modificationCounter.current[end]];
-                    return (
-                        <MarketYear key={key} {...marketYearProps} myIndex={index} />
-                        // <ResetButton /> // reset that year to the state of the preceding year
-                        // showed only for years that differ from the preceding
-                    );
-                })
-            }
-            <AddYearButton title={t('add')} add={addYear} sx={{ mt : 16 }} />
+        <Box display='flex' flexDirection='column' alignItems='flex-start' justifyContent='flex-start' width='100%' >
+            <Box display='flex' justifyContent='space-evenly' alignItems='flex-start' width='84vw' m={1} >
+                <MarketRandomizer setRandomMarket={setRandomMarket} randomize={randomize} setRandomize={setRandomize} setEnableRandomize={setEnableRandomize} />
+                <Button
+                    variant='contained' color='primary'
+                    onClick={handleRandomize} disabled={!enableRandomize}
+                    sx={{ ml : 1, mt : 1 }}>{t('randomize')}
+                </Button>
+            </Box>
+            <Paper elevation={8} sx={{ alignSelf : 'center', p : 1 }} >
+                <Typo sx={{
+                    color : (theme) => theme.palette.primary.dark
+                }}>
+                    {`${t('avgIgr')}${'\u00A0'.repeat(2)}:${'\u00A0'.repeat(2)}${avgIgr}%${'\u00A0'.repeat(5)}|${'\u00A0'.repeat(5)}${t('avgIr')}${'\u00A0'.repeat(2)}:${'\u00A0'.repeat(2)}${avgIr}%`}
+                </Typo>
+            </Paper>
+            <Box display='flex' alignItems='flex-start'>
+
+            <Box display='flex' alignItems='flex-start' component={Paper} elevation={0} p={1} m={2} maxWidth='80vw' sx={{ overflowX : 'auto' }} >
+                {
+                    marketYears.map((marketYearProps, index) => {
+                        return (
+                            <MarketYear key={marketYearProps.ID} {...marketYearProps} myIndex={index} />
+                        );
+                    })
+                }
+            </Box>
+                <AddYearButton title={t('add')} add={addYear} sx={{ mt : 18 }} />
+            </Box>
         </Box>
-        // <MarketYearPopUp addMarketYear={add} /> // popup wrapping a MarketYear and maintaining its own igr and ir state
-        // <GlobalController setCondensedDisplay={setCondensedDisplay} /> // contains two buttons to condense or spread the display
-        // setCondensedDisplay also removes from marketGrowth the years that have same igr and ir than the preceding
     );
 }
 
-// const initialProfileData = { igr: { 2022 : 8 }, ir : { 2022 : 2 } };
-const initialProfileData = { variations : [{ year : 2022, igr : 8, ir : 2 }] };
+const initialProfileData = { variations : [{ year : 0, igr : 8, ir : 2 }] };
 
 const Market = (props) => {
 

@@ -98,6 +98,7 @@ const AuthForm = ({setToken, sx}) => {
     const password = useRef('');
     const repassword = useRef('');
     const country = useRef('FR');
+    const [counter, setCounter] = useState(0);
     const [userAction, setUserAction] = useState('login');
     // const enabler = useRef({});
     // const [enable, setEnable] = useState(false);
@@ -146,7 +147,7 @@ const AuthForm = ({setToken, sx}) => {
 
         setToken(token);
         window.localStorage.setItem('token', token); // don't ever do that
-        navigate(`/home/${myID}`);
+        navigate(`/home`);
     }
 
     const {mutate : login, isError : loginIsErr, error : loginErr} = useMutation(loginUser, {onSuccess, onError});
@@ -228,6 +229,10 @@ const AuthForm = ({setToken, sx}) => {
             <FormField
                 {...getFieldProps('emailInput', 'Email', '123@example.com', 'Enter a valid email')}
                 value={email.current}
+                setState={(v) => {
+                    email.current = v
+                    setCounter(counter + 1)
+                }}
                 validateF={validateEmail}
                 // validators={{
                 //     setIsValid : (value) => dispatchFormValidity({issuer : 'email', value}),
@@ -243,6 +248,10 @@ const AuthForm = ({setToken, sx}) => {
                     `Enter a password of ${passwordMinimumLength} characters minimum`
                 )}
                 value={password.current}
+                setState={(v) => {
+                    password.current = v
+                    setCounter(counter + 1)
+                }}
                 validateF={validatePassword}
                 // validators={{
                 //     setIsValid : (value) => dispatchFormValidity({ issuer : 'password', value }),
@@ -260,7 +269,11 @@ const AuthForm = ({setToken, sx}) => {
                         'Type your password again'
                     )}
                     value={repassword.current}
-                    validateF={validateRepassword}
+                    setState={(v) => {
+                        repassword.current = v
+                        setCounter(counter + 1)
+                    }}
+                    validateF={(v) => validateRepassword(v, password)}
                     // validators={{
                     //     setIsValid : (value) => dispatchFormValidity({issuer : 'repassword', value}),
                     //     validateContent : (rpwd) => validateRepassword(rpwd, password)
@@ -292,7 +305,7 @@ const AuthForm = ({setToken, sx}) => {
                 />
             </>
             : null}
-            <Button item type='Submit' {...disabledProp} variant='contained' color='secondary' sx={{m : 1}}>Submit</Button>
+            <Button item type='Submit' variant='contained' color='secondary' sx={{m : 1}}>Submit</Button>
         </Box>
     );
 }

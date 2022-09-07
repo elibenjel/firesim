@@ -386,7 +386,7 @@ const SpendingsProfile = (props) => {
         deactivateAll.current = false;
     }
 
-    // help to determine if global chechbox state is indeterminate, true or false
+    // help to determine if global checkbox state is indeterminate, true or false
     const sumUpDeactivated = (newState) => {
         let total = true;
         let start = true;

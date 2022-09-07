@@ -15,18 +15,29 @@ const getdefaultRQFn = (isMutation) => async (obj) => {
         emptyArgs = false;
         break;
     }
-  
-    const queryName = key.charAt(0).toUpperCase() + key.slice(1);
-    const queryNameArgs = Object.entries(args).map(([argName, { graphqlType, value }]) => {
+
+    let queryName;
+    let queryBody;
+    if (Array.isArray(key)) {
+        queryName = isMutation ? 'Mutation' : 'Query';
+        queryBody = key.join('\n');
+    } else {
+        queryName = key.charAt(0).toUpperCase() + key.slice(1);
+        queryBody = key;
+    }
+
+    const queryNameArgs = Object.entries(args).map(([arg, { graphqlType, value }]) => {
+        const argName = Array.isArray(key) ? arg.join('_') : arg;
         return `$${argName}: ${graphqlType}`;
     }).join(', ');
-    const queryArgs = Object.entries(args).map(([argName, { graphqlType, value }]) => {
+    const queryArgs = Object.entries(args).map(([arg, { graphqlType, value }]) => {
+        const argName = Array.isArray(key) ? arg.join('_') : arg;
         return `${argName}: $${argName}`;
     }).join(', ');
     const query = `${isMutation ? 'mutation' : 'query'} ${queryName}${emptyArgs ? '' : `(${queryNameArgs})`} {
-        ${key}${emptyArgs ? '' : `(${queryArgs})`}${selection}
+        ${queryBody}${emptyArgs ? '' : `(${queryArgs})`}${selection}
     }`;
-  
+
     const payload = {
         query,
         variables: Object.entries(args).reduce((prev, [argName, { value }]) => ({ ...prev, [argName]: value }), {})
@@ -50,9 +61,9 @@ const getdefaultRQFn = (isMutation) => async (obj) => {
   
         res.error = data.data.errors;
         if (!res.error) {
-            res.data = data.data.data[key];
+            res.data = Array.isArray(key) ? data.data.data : data.data.data[key];
             res.feedback = feedbackOptions.disable || feedbackOptions.disableOnSuccess ? ''
-            : createFeedback('onSuccess')(`Successfully fetched ${key}`);
+            : createFeedback('onSuccess')(`Successfully fetched ${Array.isArray(key) ? key.join(', ') : key}`);
             return res;
         }
   

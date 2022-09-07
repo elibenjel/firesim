@@ -22,7 +22,9 @@ module.exports = {
             return result;
         },
         loadSpendingsProfile: (_, args, { dataSources }) => dataSources.simulationAPI.getSpendingsProfile(args),
+        loadSpendingsProfiles: (_, args, { dataSources }) => dataSources.simulationAPI.getSpendingsProfiles(args),
         loadIncomeProfile: (_, args, { dataSources }) => dataSources.simulationAPI.getIncomeProfile(args),
+        loadIncomeProfiles: (_, args, { dataSources }) => dataSources.simulationAPI.getIncomeProfiles(args),
         loadMarketProfile: (_, args, { dataSources }) => dataSources.simulationAPI.getMarketProfile(args)
     },
     Mutation: {

@@ -8,13 +8,13 @@ const BubbleInfo = (props) => {
     return (
         <Popper placement='right-end' transition {...popperProps} >
         {({ TransitionProps }) => (
-          <Fade {...TransitionProps} timeout={300} >
-            <Paper variant='simple' sx={{ p : '4px 24px 4px', maxWidth : '20rem' }}>
-                <Typography variant='body2' sx={{ textAlign : 'justify' }}>
-                    {content}
-                </Typography>
-            </Paper>
-          </Fade>
+            <Fade {...TransitionProps} timeout={300} >
+                <Paper variant='simple' sx={{ p : '4px 24px 4px', maxWidth : '20rem' }}>
+                    <Typography variant='body2' sx={{ textAlign : 'justify' }}>
+                        {content}
+                    </Typography>
+                </Paper>
+            </Fade>
         )}
       </Popper>
     )

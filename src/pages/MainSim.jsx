@@ -8,24 +8,9 @@ import CustomDrawer from '../components/MainSim/CustomDrawer.jsx';
 import Spendings from './MainSim/Spendings.jsx';
 import Income from './MainSim/Income.jsx';
 import Market from './MainSim/Market.jsx';
+import Simulation from './MainSim/Simulation.jsx';
 import ParameterField from '../components/FastSim/ParameterField.jsx';
 
-
-const Test = (props) => {
-    const [v1, setV1] = useState(0);
-    const v2 = useRef('a');
-    const setV1Util = (val) => {
-        setV1(val);
-        v2.current = (val);
-    }
-
-    return (
-        <Box>
-            <ParameterField value={v1} setState={setV1Util} />
-            <ParameterField value={v2.current} readOnly />
-        </Box>
-    )
-}
 
 const tabs = [
     {
@@ -33,7 +18,7 @@ const tabs = [
         label: (t) => t('sim-tab'),
         to: '/mainsim/',
         icon: <DisplaySettings />,
-        element: <Test />
+        element: <Simulation />
     },
     {
         name: 'spendings',

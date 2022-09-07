@@ -1,6 +1,8 @@
 const { DataSource } = require('apollo-datasource');
 const { ApolloError } = require('apollo-server-errors');
 const { UserRoles } = require('../enums');
+const { spawn } = require('child_process');
+
 
 class SimulationAPI extends DataSource {
     constructor({ models }) {
@@ -90,6 +92,14 @@ class SimulationAPI extends DataSource {
                 return item;
             }
         }
+    }
+
+    async getSpendingsProfiles({ names }) {
+        const data = await names.map((name) => {
+            return this.getSpendingsProfile({ name });
+        });
+
+        return data;
     }
 
     async getMySpendingsProfileNames() {
@@ -233,7 +243,56 @@ class SimulationAPI extends DataSource {
         return await this.getProfile('income', name);
     }
 
-    async getMarketProfile({ name }) {
+    async getIncomeProfiles({ names }) {
+        const data = await names.map((name) => {
+            return this.getIncomeProfile({ name });
+        });
+
+        return data;
+    }
+
+    async getMarketProfile({ name, randomMarketArgs }) {
+        if (randomMarketArgs) {
+            const randomMarket = () => {
+                return new Promise((resolve, reject) => {
+                    const python = spawn('python', [
+                        './src/utils/generateRandomMarket.py',
+                        randomMarketArgs.mean_igr.toString(),
+                        randomMarketArgs.minv_igr.toString(),
+                        randomMarketArgs.maxv_igr.toString(),
+                        randomMarketArgs.mean_ir.toString(),
+                        randomMarketArgs.minv_ir.toString(),
+                        randomMarketArgs.maxv_ir.toString(),
+                        randomMarketArgs.period.toString()
+                    ]);
+
+                    python.stdout.on('data', function (data) {
+                        resolve(data.toString());
+                    });
+
+                    // python.on('close', (code) => {
+                    //     console.log('code : ', code)
+                    // });
+
+                    python.stderr.on('data', function (data) {
+                        reject(data.toString());
+                    });
+                });
+            }
+
+            let market = await randomMarket();
+            market = JSON.parse(market);
+            const startYear = 0;
+            const marketProfile = {
+                name: 'randomized',
+                variations: market.igr.map((igr, index) => {
+                    return { year : startYear + index, igr, ir : market.ir[index] }
+                })
+            }
+
+            return marketProfile;
+        }
+
         return await this.getProfile('market', name);
     }
 

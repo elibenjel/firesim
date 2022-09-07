@@ -31,7 +31,7 @@ const ProfileManager = (props) => {
 
     // only enable the query to load a profile when load button is clicked
     // the query should disable itself on settled
-    const disableFetchProfileQuery = useRef(false);
+    const disableFetchProfileQuery = useRef(true);
 
     const queryClient = useQueryClient();
 
@@ -41,7 +41,7 @@ const ProfileManager = (props) => {
         queryArgs: { selectedProfileName, initialProfileData },
         queryOptions: { enabled : !disableFetchProfileQuery.current },
         queryCallbacks: {
-            onSuccess: () => {
+            onSuccess: (data) => {
                 disableFetchProfileQuery.current = true;
                 profileKey.current += 1;
             }
@@ -145,7 +145,7 @@ const ProfileManager = (props) => {
     }
 
     const childrenProps = {
-        tradHook: t, initial: fetchedProfile, setIsProfileLocked
+        tradHook: t, initial: fetchedProfile || initialProfileData, setIsProfileLocked
     }
 
     return (
@@ -187,7 +187,6 @@ const ProfileManager = (props) => {
                         sx={{ ml : 1 }}>{t('remove')}</Button>
             </Paper>
             {children({ key : profileKey.current, props : childrenProps })}
-            {/* <sPanel key={profileKey.current} {...childrenProps} /> */}
         </Box>
     )
 }

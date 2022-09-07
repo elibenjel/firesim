@@ -3,14 +3,19 @@ import axios from 'axios';
 import { useMutation, useQuery } from 'react-query';
 
 const useFetchProfile = (queryName, dataSelection) => ({ queryArgs, feedbackOptions, queryOptions, queryCallbacks, queryClient }) => {
-    const { selectedProfileName, initialProfileData } = queryArgs;
+    const { selectedProfileName, initialProfileData, selectedProfileNames, initialProfilesData } = queryArgs;
+    const many = selectedProfileName === undefined;
+    const argName = !many ? 'name' : 'names';
+    const argType = !many ? 'String!' : '[String!]!';
+    const argValue = !many ? selectedProfileName : selectedProfileNames;
+    const initialData = !many ? initialProfileData : initialProfilesData;
     const { enabled } = queryOptions;
     const myQueryKey = [
-        queryName,
+        `${queryName}${!many ? '' : 's'}`,
         {
             graphqlArgs: {
                 args: {
-                    name : { graphqlType: 'String!', value : selectedProfileName }
+                    [argName] : { graphqlType: argType, value : argValue }
                 },
                 selection: dataSelection
             },
@@ -25,7 +30,7 @@ const useFetchProfile = (queryName, dataSelection) => ({ queryArgs, feedbackOpti
         keepPreviousData: true, cacheTime: 0,
         initialData: {
             error: null,
-            data: initialProfileData,
+            data: initialData,
             feedback: ''
         }
     };
@@ -54,6 +59,7 @@ const useFetchSpendingsProfile = useFetchProfile('loadSpendingsProfile', `{
         amount,
         frequency
     }
+    total
 }`);
 
 const useFetchIncomeProfile = useFetchProfile('loadIncomeProfile', `{

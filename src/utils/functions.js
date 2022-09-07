@@ -1,2 +1,2 @@
 
-export const isNumber = (val) => val && !Number.isNaN(Number(val));
+export const isNumber = (val) => val !== '' && !Number.isNaN(Number(val));

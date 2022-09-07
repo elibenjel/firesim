@@ -187,13 +187,19 @@ myTheme.components = {
         styleOverrides: {
             html: {
             // colorScheme: 'dark'
+            overflowX: 'hidden',
+            height: '100%',
+            width: '100%'
             },
             body: {
                 backgroundColor: '#FF0000',
                 backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 1000'%3E%3Cg %3E%3Ccircle fill='%23FF0000' cx='50' cy='0' r='50'/%3E%3Cg fill='%23ff3939' %3E%3Ccircle cx='0' cy='50' r='50'/%3E%3Ccircle cx='100' cy='50' r='50'/%3E%3C/g%3E%3Ccircle fill='%23ff5151' cx='50' cy='100' r='50'/%3E%3Cg fill='%23ff6363' %3E%3Ccircle cx='0' cy='150' r='50'/%3E%3Ccircle cx='100' cy='150' r='50'/%3E%3C/g%3E%3Ccircle fill='%23ff7272' cx='50' cy='200' r='50'/%3E%3Cg fill='%23ff8080' %3E%3Ccircle cx='0' cy='250' r='50'/%3E%3Ccircle cx='100' cy='250' r='50'/%3E%3C/g%3E%3Ccircle fill='%23ff8c8c' cx='50' cy='300' r='50'/%3E%3Cg fill='%23ff9797' %3E%3Ccircle cx='0' cy='350' r='50'/%3E%3Ccircle cx='100' cy='350' r='50'/%3E%3C/g%3E%3Ccircle fill='%23ffa1a1' cx='50' cy='400' r='50'/%3E%3Cg fill='%23ffabab' %3E%3Ccircle cx='0' cy='450' r='50'/%3E%3Ccircle cx='100' cy='450' r='50'/%3E%3C/g%3E%3Ccircle fill='%23ffb4b4' cx='50' cy='500' r='50'/%3E%3Cg fill='%23ffbdbd' %3E%3Ccircle cx='0' cy='550' r='50'/%3E%3Ccircle cx='100' cy='550' r='50'/%3E%3C/g%3E%3Ccircle fill='%23ffc6c6' cx='50' cy='600' r='50'/%3E%3Cg fill='%23ffcece' %3E%3Ccircle cx='0' cy='650' r='50'/%3E%3Ccircle cx='100' cy='650' r='50'/%3E%3C/g%3E%3Ccircle fill='%23ffd5d5' cx='50' cy='700' r='50'/%3E%3Cg fill='%23ffdddd' %3E%3Ccircle cx='0' cy='750' r='50'/%3E%3Ccircle cx='100' cy='750' r='50'/%3E%3C/g%3E%3Ccircle fill='%23ffe4e4' cx='50' cy='800' r='50'/%3E%3Cg fill='%23ffebeb' %3E%3Ccircle cx='0' cy='850' r='50'/%3E%3Ccircle cx='100' cy='850' r='50'/%3E%3C/g%3E%3Ccircle fill='%23fff2f2' cx='50' cy='900' r='50'/%3E%3Cg fill='%23fff9f9' %3E%3Ccircle cx='0' cy='950' r='50'/%3E%3Ccircle cx='100' cy='950' r='50'/%3E%3C/g%3E%3Ccircle fill='%23FFFFFF' cx='50' cy='1000' r='50'/%3E%3C/g%3E%3C/svg%3E")`,
                 backgroundAttachment: 'fixed',
-                backgroundSize: 'contain'
+                backgroundSize: 'contain',
                 /* background by SVGBackgrounds.com */
+                overflowX: 'hidden',
+                height: '100%',
+                width: '100%'
             },
             '.wrapper-size-specifier': {
                 minHeight: '100vh',
@@ -206,9 +212,9 @@ myTheme.components = {
     },
 }
 
-myTheme.cssVariables = {
-    appBarWidth : 150,
-}
+myTheme.cssVariables = {};
+myTheme.cssVariables.appBarWidth = 150;
+myTheme.cssVariables.contentWidth = document.documentElement.clientWidth - 150;
 
 export default myTheme;
 

@@ -39,9 +39,9 @@ const typeDefs = gql`
     }
 
     type MarketYear {
-        year: Float!
+        year: Int!
         igr: Float!
-        ir: Int!
+        ir: Float!
     }
 
     input SpendingInput {
@@ -57,9 +57,19 @@ const typeDefs = gql`
     }
 
     input MarketYearInput {
-        year: Float!
+        year: Int!
         igr: Float!
-        ir: Int!
+        ir: Float!
+    }
+
+    input RandomMarketArgsInput {
+        mean_igr: Float
+        minv_igr: Float
+        maxv_igr: Float
+        mean_ir: Float
+        minv_ir: Float
+        maxv_ir: Float
+        period: Int
     }
 
     enum Role {
@@ -72,10 +82,12 @@ const typeDefs = gql`
         users: [User!]
         mySpendingsProfileNames: [String!]
         loadSpendingsProfile(name: String!): SpendingsProfile
+        loadSpendingsProfiles(names: [String!]!): [SpendingsProfile]
         myIncomeProfileNames: [String!]
         loadIncomeProfile(name: String!): IncomeProfile
+        loadIncomeProfiles(names: [String!]!): [IncomeProfile]
         myMarketProfileNames: [String!]
-        loadMarketProfile(name: String!): MarketProfile
+        loadMarketProfile(name: String!, randomMarketArgs: RandomMarketArgsInput): MarketProfile
     }
 
     type Mutation {
